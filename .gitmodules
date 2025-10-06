@@ -1,0 +1,3 @@
+[submodule "openzl"]
+	path = openzl
+	url = git@github.com:facebook/openzl.git

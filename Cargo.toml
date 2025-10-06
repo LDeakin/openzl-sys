@@ -1,0 +1,45 @@
+[package]
+name = "openzl-sys"
+version = "0.1.0+openzl.0.1.0"
+authors = ["Lachlan Deakin <ljdgit@gmail.com>"]
+edition = "2021"
+rust-version = "1.71"
+description = "FFI bindings for OpenZL, a novel data compression framework"
+documentation = "https://docs.rs/openzl-sys"
+repository = "https://github.com/LDeakin/openzl-sys"
+license = "MIT OR Apache-2.0"
+keywords = ["openzl", "compression"]
+categories = ["external-ffi-bindings", "compression"]
+exclude = [
+    ".github",
+    "openzl/.github/**",
+    "openzl/.vscode/**",
+    "openzl/benchmark/**",
+    "openzl/build/**",
+    "openzl/cli/**",
+    "openzl/contrib/**",
+    "openzl/custom_parsers/**",
+    "openzl/custom_transforms/**",
+    "openzl/deps/**",
+    "openzl/doc/**",
+    "openzl/examples/**",
+    "openzl/py/**",
+    "openzl/scripts/**",
+    "openzl/tests/**",
+    "openzl/tools/**",
+]
+links = "openzl"
+
+[lib]
+doctest = false
+
+[features]
+bindgen = ["dep:bindgen"]
+
+[dependencies]
+zstd-sys = "2.0"
+
+[build-dependencies]
+bindgen = { version = "0.72.1", optional = true }
+cc = "1.2.40"
+glob = "0.3.3"
