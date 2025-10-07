@@ -1,6 +1,6 @@
 [package]
 name = "openzl-sys"
-version = "0.1.0+openzl.0.1.0"
+version = "0.1.1+openzl.0.1.0"
 authors = ["Lachlan Deakin <ljdgit@gmail.com>"]
 edition = "2021"
 rust-version = "1.71"
