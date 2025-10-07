@@ -10,23 +10,18 @@ repository = "https://github.com/LDeakin/openzl-sys"
 license = "MIT OR Apache-2.0"
 keywords = ["openzl", "compression"]
 categories = ["external-ffi-bindings", "compression"]
-exclude = [
-    ".github",
-    "openzl/.github/**",
-    "openzl/.vscode/**",
-    "openzl/benchmark/**",
-    "openzl/build/**",
-    "openzl/cli/**",
-    "openzl/contrib/**",
-    "openzl/custom_parsers/**",
-    "openzl/custom_transforms/**",
-    "openzl/deps/**",
-    "openzl/doc/**",
-    "openzl/examples/**",
-    "openzl/py/**",
-    "openzl/scripts/**",
-    "openzl/tests/**",
-    "openzl/tools/**",
+include = [
+    "build.rs",
+    "static_fns_wrapper.c",
+    "bindings.rs",
+    "src/**",
+    "tests/**",
+    "LICENSE-*",
+    "./README.md",
+    "openzl/include/**",
+    "openzl/src/**",
+    "openzl/LICENSE",
+    "openzl/README.md",
 ]
 links = "openzl"
 
