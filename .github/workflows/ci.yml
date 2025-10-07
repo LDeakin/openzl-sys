@@ -17,7 +17,7 @@ jobs:
         include:
           - {os: ubuntu, toolchain: stable}
           - {os: ubuntu, toolchain: "1.71"}
-          # - {os: windows, toolchain: stable-msvc}
+          - {os: windows, toolchain: stable-msvc}
           - {os: windows, toolchain: stable-gnu}
           - {os: macos, toolchain: stable}
     runs-on: ${{ matrix.os }}-latest

@@ -22,22 +22,26 @@
 //     }
 // }
 
+fn configure_build(build: &mut cc::Build) {
+    build.std("c11");
+    build.include("openzl/include");
+    build.prefer_clang_cl_over_msvc(true);
+    build.flag("-w"); // Suppress all warnings
+}
+
 fn compile_openzl_cc() {
     // Get zstd include path from zstd-sys
     let zstd_include =
         std::env::var("DEP_ZSTD_INCLUDE").expect("DEP_ZSTD_INCLUDE not set by zstd-sys");
 
     let mut build = cc::Build::new();
-    build.std("c11");
-    build.include("openzl/include");
+    configure_build(&mut build);
     build.include("openzl/src");
     build.include(&zstd_include);
     build.define("ZSTD_DISABLE_ASM", "1");
     // Redefine ZL_INLINE to remove 'inline' keyword, making inline functions
     // available as actual symbols that can be linked
     build.define("ZL_INLINE", "static ZL_UNUSED_ATTR");
-    // Suppress warnings from C compilation
-    build.flag("-w"); // Suppress all warnings
 
     let src_files = glob::glob("openzl/src/**/*.c")
         .expect("Failed to read glob pattern")
@@ -91,11 +95,8 @@ fn main() {
     // Compile the static inline function wrapper if it exists
     let wrapper_c = manifest_dir.join("static_fns_wrapper.c");
     let mut build = cc::Build::new();
-    build.std("c11");
-    build.include("openzl/include");
+    configure_build(&mut build);
     build.file(&wrapper_c);
-    // Suppress warnings from C compilation
-    build.flag("-w"); // Suppress all warnings
     build.compile("static_fns_wrapper");
 
     std::fs::create_dir_all(dst.join("include")).unwrap();
