@@ -3901,8 +3901,8 @@ extern "C" {
 }
 pub type ZL_SelectorFn = ::std::option::Option<
     unsafe extern "C" fn(
-        selectorAPI: *const ZL_Selector,
-        input: *const ZL_Input,
+        selCtx: *const ZL_Selector,
+        inputStream: *const ZL_Input,
         customGraphs: *const ZL_GraphID,
         nbCustomGraphs: usize,
     ) -> ZL_GraphID,
