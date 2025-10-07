@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2+openzl.0.1.0] - 2025-10-08
+
+### Changed
+ - Use HTTPS for submodule over SSH
+
+### Fixed
+ - Fix trusted publishing
+ - Compile on windows-msvc with clang-cl
+ - Remove unnecessarily packaged files
+
 ## [0.1.1+openzl.0.1.0] - 2025-10-07
 
 ### Added
@@ -21,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Initial release
  - OpenZL: **0.1.0** (2025-10-07)
 
-[unreleased]: https://github.com/LDeakin/openzl-sys/compare/v0.1.1+openzl.0.1.0...HEAD
+[unreleased]: https://github.com/LDeakin/openzl-sys/compare/v0.1.2+openzl.0.1.0...HEAD
+[0.1.2+openzl.0.1.0]: https://github.com/LDeakin/openzl-sys/releases/tag/v0.1.2+openzl.0.1.0
 [0.1.1+openzl.0.1.0]: https://github.com/LDeakin/openzl-sys/releases/tag/v0.1.1+openzl.0.1.0
 [0.1.0+openzl.0.1.0]: https://github.com/LDeakin/openzl-sys/releases/tag/v0.1.0+openzl.0.1.0
