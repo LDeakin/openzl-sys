@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Bump `openzl` to 0.1.2
+  - **Breaking**: `ZL_CompressIntrospectionHooks_s` fields added / reordered
+  - **Breaking**: `ZL_HAVE_FBCODE` replaced with `ZL_IS_FBCODE`
+  - **Breaking**: `ZL_Data_s` replaced with `Stream_s`
+  - Add `ZL_Comment`, `ZL_Segmenter_getOperationContext()`, `ZL_RuntimeGraphParameters`, `ZL_CCtx_addHeaderComment()`, `ZL_FrameInfo_getComment()`
+  - Add additional `ZL_StandardGraphID_*` constants
+
 ## [0.1.2+openzl.0.1.0] - 2025-10-08
 
 ### Changed

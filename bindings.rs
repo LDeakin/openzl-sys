@@ -89,13 +89,14 @@ pub const ZL_ENABLE_RET_IF_ARG_PRINTING: u32 = 1;
 pub const ZL_ENABLE_ERR_IF_ARG_PRINTING: u32 = 1;
 pub const ZL_LIBRARY_VERSION_MAJOR: u32 = 0;
 pub const ZL_LIBRARY_VERSION_MINOR: u32 = 1;
-pub const ZL_LIBRARY_VERSION_PATCH: u32 = 0;
-pub const ZL_LIBRARY_VERSION_NUMBER: u32 = 100;
-pub const ZL_FBCODE_IS_RELEASE: u32 = 0;
+pub const ZL_LIBRARY_VERSION_PATCH: u32 = 3;
+pub const ZL_LIBRARY_VERSION_NUMBER: u32 = 103;
 pub const ZL_MIN_FORMAT_VERSION: u32 = 8;
-pub const ZL_MAX_FORMAT_VERSION: u32 = 21;
+pub const ZL_MAX_FORMAT_VERSION: u32 = 22;
 pub const ZL_CHUNK_VERSION_MIN: u32 = 21;
 pub const ZL_TYPED_INPUT_VERSION_MIN: u32 = 14;
+pub const ZL_IS_FBCODE: u32 = 0;
+pub const ZL_FBCODE_IS_RELEASE: u32 = 0;
 pub const ZL_COMPRESSIONLEVEL_DEFAULT: u32 = 6;
 pub const ZL_DECOMPRESSIONLEVEL_DEFAULT: u32 = 3;
 pub const ZL_MINSTREAMSIZE_DEFAULT: u32 = 10;
@@ -115,7 +116,6 @@ pub const ZL_FIELD_LZ_EXTRA_MATCH_LENGTHS_GRAPH_OVERRIDE_INDEX_PID: u32 = 4;
 pub const ZL_SDDL_DESCRIPTION_PID: u32 = 522;
 pub const ZL_SPLIT_CHANNEL_ID: u32 = 867;
 pub const ZL_TOKENIZE_SORT_PID: u32 = 0;
-pub const ZL_HAVE_FBCODE: u32 = 1;
 pub const ZL_HAVE_X86_64_ASM: u32 = 1;
 pub const ZL_ALLOW_INTROSPECTION: u32 = 1;
 pub const ZL_LP_INVALID_PARAMID: i32 = -1;
@@ -290,10 +290,11 @@ fn bindgen_test_layout_ZL_GraphID() {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct ZL_Data_s {
+pub struct Stream_s {
     _unused: [u8; 0],
 }
-pub type ZL_Data = ZL_Data_s;
+pub type Stream = Stream_s;
+pub type ZL_Data = Stream;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ZL_Input_s {
@@ -369,6 +370,12 @@ pub struct ZL_Edge_s {
     _unused: [u8; 0],
 }
 pub type ZL_Edge = ZL_Edge_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_Segmenter_s {
+    _unused: [u8; 0],
+}
+pub type ZL_Segmenter = ZL_Segmenter_s;
 pub const ZL_TernaryParam_auto: ZL_TernaryParam = 0;
 pub const ZL_TernaryParam_enable: ZL_TernaryParam = 1;
 pub const ZL_TernaryParam_disable: ZL_TernaryParam = 2;
@@ -478,6 +485,38 @@ fn bindgen_test_layout_ZL_NodeIDList() {
         unsafe { ::std::ptr::addr_of!((*ptr).nbNodeIDs) as usize - ptr as usize },
         8usize,
         "Offset of field: ZL_NodeIDList::nbNodeIDs"
+    );
+}
+#[doc = " @brief Data layout for comment contained in the frame header."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_Comment {
+    pub data: *const ::std::os::raw::c_void,
+    pub size: usize,
+}
+#[test]
+fn bindgen_test_layout_ZL_Comment() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Comment> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Comment>(),
+        16usize,
+        "Size of ZL_Comment"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Comment>(),
+        8usize,
+        "Alignment of ZL_Comment"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).data) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Comment::data"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).size) as usize - ptr as usize },
+        8usize,
+        "Offset of field: ZL_Comment::size"
     );
 }
 #[repr(C)]
@@ -663,6 +702,9 @@ extern "C" {
     pub fn ZL_CompressorDeserializer_getOperationContext(
         ctx: *mut ZL_CompressorDeserializer,
     ) -> *mut ZL_OperationContext;
+}
+extern "C" {
+    pub fn ZL_Segmenter_getOperationContext(ctx: *mut ZL_Segmenter) -> *mut ZL_OperationContext;
 }
 extern "C" {
     pub fn ZL_ErrorContext_getOperationContext(
@@ -1458,10 +1500,43 @@ fn bindgen_test_layout_ZL_LocalParams() {
         "Offset of field: ZL_LocalParams::refParams"
     );
 }
+#[doc = " @defgroup Group_Compressor_GraphCustomization Graph Customization\n\n Graphs can be customized to override their name, local parameters, custom\n nodes and custom graphs. This is an advanced use case, and mainly an\n implementation detail of graphs. Most graphs which accept parameters provide\n helper functions to correctly parameterize the graph.\n\n @{"]
+pub type ZL_RuntimeGraphParameters = ZL_GraphParameters_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ZL_CompressIntrospectionHooks_s {
     pub opaque: *mut ::std::os::raw::c_void,
+    pub on_segmenterEncode_start: ::std::option::Option<
+        unsafe extern "C" fn(
+            opaque: *mut ::std::os::raw::c_void,
+            segCtx: *mut ZL_Segmenter,
+            placeholder: *mut ::std::os::raw::c_void,
+        ),
+    >,
+    pub on_segmenterEncode_end: ::std::option::Option<
+        unsafe extern "C" fn(
+            opaque: *mut ::std::os::raw::c_void,
+            segCtx: *mut ZL_Segmenter,
+            r: ZL_Report,
+        ),
+    >,
+    pub on_ZL_Segmenter_processChunk_start: ::std::option::Option<
+        unsafe extern "C" fn(
+            opaque: *mut ::std::os::raw::c_void,
+            segCtx: *mut ZL_Segmenter,
+            numElts: *const usize,
+            numInputs: usize,
+            startingGraphID: ZL_GraphID,
+            rGraphParams: *const ZL_RuntimeGraphParameters,
+        ),
+    >,
+    pub on_ZL_Segmenter_processChunk_end: ::std::option::Option<
+        unsafe extern "C" fn(
+            opaque: *mut ::std::os::raw::c_void,
+            segCtx: *mut ZL_Segmenter,
+            r: ZL_Report,
+        ),
+    >,
     pub on_ZL_Encoder_getScratchSpace: ::std::option::Option<
         unsafe extern "C" fn(opaque: *mut ::std::os::raw::c_void, ei: *mut ZL_Encoder, size: usize),
     >,
@@ -1569,7 +1644,7 @@ fn bindgen_test_layout_ZL_CompressIntrospectionHooks_s() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_CompressIntrospectionHooks_s>(),
-        104usize,
+        136usize,
         "Size of ZL_CompressIntrospectionHooks_s"
     );
     assert_eq!(
@@ -1583,55 +1658,79 @@ fn bindgen_test_layout_ZL_CompressIntrospectionHooks_s() {
         "Offset of field: ZL_CompressIntrospectionHooks_s::opaque"
     );
     assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).on_segmenterEncode_start) as usize - ptr as usize },
+        8usize,
+        "Offset of field: ZL_CompressIntrospectionHooks_s::on_segmenterEncode_start"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).on_segmenterEncode_end) as usize - ptr as usize },
+        16usize,
+        "Offset of field: ZL_CompressIntrospectionHooks_s::on_segmenterEncode_end"
+    );
+    assert_eq!(
+        unsafe {
+            ::std::ptr::addr_of!((*ptr).on_ZL_Segmenter_processChunk_start) as usize - ptr as usize
+        },
+        24usize,
+        "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Segmenter_processChunk_start"
+    );
+    assert_eq!(
+        unsafe {
+            ::std::ptr::addr_of!((*ptr).on_ZL_Segmenter_processChunk_end) as usize - ptr as usize
+        },
+        32usize,
+        "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Segmenter_processChunk_end"
+    );
+    assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).on_ZL_Encoder_getScratchSpace) as usize - ptr as usize
         },
-        8usize,
+        40usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Encoder_getScratchSpace"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).on_ZL_Encoder_sendCodecHeader) as usize - ptr as usize
         },
-        16usize,
+        48usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Encoder_sendCodecHeader"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).on_ZL_Encoder_createTypedStream) as usize - ptr as usize
         },
-        24usize,
+        56usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Encoder_createTypedStream"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).on_ZL_Graph_getScratchSpace) as usize - ptr as usize },
-        32usize,
+        64usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Graph_getScratchSpace"
     );
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . on_ZL_Edge_setMultiInputDestination_wParams) as usize - ptr as usize } , 40usize , "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Edge_setMultiInputDestination_wParams");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . on_ZL_Edge_setMultiInputDestination_wParams) as usize - ptr as usize } , 72usize , "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_Edge_setMultiInputDestination_wParams");
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).on_migraphEncode_start) as usize - ptr as usize },
-        48usize,
+        80usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_migraphEncode_start"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).on_migraphEncode_end) as usize - ptr as usize },
-        56usize,
+        88usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_migraphEncode_end"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).on_codecEncode_start) as usize - ptr as usize },
-        64usize,
+        96usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_codecEncode_start"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).on_codecEncode_end) as usize - ptr as usize },
-        72usize,
+        104usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_codecEncode_end"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).on_cctx_convertOneInput) as usize - ptr as usize },
-        80usize,
+        112usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_cctx_convertOneInput"
     );
     assert_eq!(
@@ -1639,7 +1738,7 @@ fn bindgen_test_layout_ZL_CompressIntrospectionHooks_s() {
             ::std::ptr::addr_of!((*ptr).on_ZL_CCtx_compressMultiTypedRef_start) as usize
                 - ptr as usize
         },
-        88usize,
+        120usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_CCtx_compressMultiTypedRef_start"
     );
     assert_eq!(
@@ -1647,7 +1746,7 @@ fn bindgen_test_layout_ZL_CompressIntrospectionHooks_s() {
             ::std::ptr::addr_of!((*ptr).on_ZL_CCtx_compressMultiTypedRef_end) as usize
                 - ptr as usize
         },
-        96usize,
+        128usize,
         "Offset of field: ZL_CompressIntrospectionHooks_s::on_ZL_CCtx_compressMultiTypedRef_end"
     );
 }
@@ -1803,6 +1902,14 @@ extern "C" {
     ) -> *mut ZL_TypedRef;
 }
 extern "C" {
+    #[doc = " Adds header comment to the compressed frame for the following compression.\n The message will be overridden if added a second time. The message is erased\n from the cctx at the end of each compression.\n\n @note A comment of size 0 clears the comment field.\n\n @param comment The comment to add. The comment is copied and stored in the\n cctx.\n @param commentSize The size of the comment or 0 to clear the comment."]
+    pub fn ZL_CCtx_addHeaderComment(
+        cctx: *mut ZL_CCtx,
+        comment: *const ::std::os::raw::c_void,
+        commentSize: usize,
+    ) -> ZL_Report;
+}
+extern "C" {
     #[doc = " Frees the given `ZL_TypedRef`.\n\n @param tref the object to free\n\n @note All ZL_TypedRef* objects of any type are released by the same method"]
     pub fn ZL_TypedRef_free(tref: *mut ZL_TypedRef);
 }
@@ -1840,11 +1947,13 @@ pub const ZL_StandardGraphID_flatpack: ZL_StandardGraphID = 9;
 pub const ZL_StandardGraphID_field_lz: ZL_StandardGraphID = 10;
 pub const ZL_StandardGraphID_compress_generic: ZL_StandardGraphID = 11;
 pub const ZL_StandardGraphID_select_generic_lz_backend: ZL_StandardGraphID = 12;
-pub const ZL_StandardGraphID_select_numeric: ZL_StandardGraphID = 13;
-pub const ZL_StandardGraphID_clustering: ZL_StandardGraphID = 14;
-pub const ZL_StandardGraphID_try_parse_int: ZL_StandardGraphID = 15;
-pub const ZL_StandardGraphID_simple_data_description_language: ZL_StandardGraphID = 16;
-pub const ZL_StandardGraphID_public_end: ZL_StandardGraphID = 17;
+pub const ZL_StandardGraphID_segment_numeric: ZL_StandardGraphID = 13;
+pub const ZL_StandardGraphID_select_numeric: ZL_StandardGraphID = 14;
+pub const ZL_StandardGraphID_clustering: ZL_StandardGraphID = 15;
+pub const ZL_StandardGraphID_try_parse_int: ZL_StandardGraphID = 16;
+pub const ZL_StandardGraphID_simple_data_description_language: ZL_StandardGraphID = 17;
+pub const ZL_StandardGraphID_simple_data_description_language_v2: ZL_StandardGraphID = 18;
+pub const ZL_StandardGraphID_public_end: ZL_StandardGraphID = 19;
 pub type ZL_StandardGraphID = ::std::os::raw::c_uint;
 pub const ZL_StandardNodeID_illegal: ZL_StandardNodeID = 0;
 pub const ZL_StandardNodeID_delta_int: ZL_StandardNodeID = 2;
@@ -2136,8 +2245,6 @@ extern "C" {
 extern "C" {
     pub fn ZL_Edge_getData(sctx: *const ZL_Edge) -> *const ZL_Input;
 }
-#[doc = " @defgroup Group_Compressor_GraphCustomization Graph Customization\n\n Graphs can be customized to override their name, local parameters, custom\n nodes and custom graphs. This is an advanced use case, and mainly an\n implementation detail of graphs. Most graphs which accept parameters provide\n helper functions to correctly parameterize the graph.\n\n @{"]
-pub type ZL_RuntimeGraphParameters = ZL_GraphParameters_s;
 extern "C" {
     pub fn ZL_Graph_getScratchSpace(
         gctx: *mut ZL_Graph,
@@ -2941,7 +3048,7 @@ extern "C" {
 extern "C" {
     #[doc = " @brief Set global parameters via @p compressor. In this construction, global\n parameters are attached to a Compressor object. Global Parameters set at\n Compressor level can be overridden later at CCtx level.\n\n @returns Success or an error which can be checked with ZL_isError().\n @param gcparam The global parameter to set.\n @param value The value to set for the global parameter."]
     pub fn ZL_Compressor_setParameter(
-        compresor: *mut ZL_Compressor,
+        compressor: *mut ZL_Compressor,
         gcparam: ZL_CParam,
         value: ::std::os::raw::c_int,
     ) -> ZL_Report;
@@ -3783,7 +3890,7 @@ extern "C" {
     pub fn ZL_Output_numElts(output: *const ZL_Output) -> ZL_Report;
 }
 extern "C" {
-    #[doc = " @returns The content size in bytes that has been committed to @p output.\n For non-string types, this is the eltWidth * numElts. For string types, this\n is the sum of the lengths of each stream. If @p output has not been commited,\n it returns an error."]
+    #[doc = " @returns The content size in bytes that has been committed to @p output.\n For non-string types, this is the eltWidth * numElts. For string types, this\n is the sum of the lengths of each stream. If @p output has not been\n committed, it returns an error."]
     pub fn ZL_Output_contentSize(output: *const ZL_Output) -> ZL_Report;
 }
 extern "C" {
@@ -3901,8 +4008,8 @@ extern "C" {
 }
 pub type ZL_SelectorFn = ::std::option::Option<
     unsafe extern "C" fn(
-        selCtx: *const ZL_Selector,
-        inputStream: *const ZL_Input,
+        selectorAPI: *const ZL_Selector,
+        input: *const ZL_Input,
         customGraphs: *const ZL_GraphID,
         nbCustomGraphs: usize,
     ) -> ZL_GraphID,
@@ -4703,6 +4810,89 @@ extern "C" {
         fi: *const ZL_FrameInfo,
         outputID: ::std::os::raw::c_int,
     ) -> ZL_Report;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_Result_ZL_Comment_inner {
+    pub _code: ZL_ErrorCode,
+    pub _value: ZL_Comment,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_ZL_Comment_inner() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_ZL_Comment_inner> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_ZL_Comment_inner>(),
+        24usize,
+        "Size of ZL_Result_ZL_Comment_inner"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_ZL_Comment_inner>(),
+        8usize,
+        "Alignment of ZL_Result_ZL_Comment_inner"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_ZL_Comment_inner::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        8usize,
+        "Offset of field: ZL_Result_ZL_Comment_inner::_value"
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ZL_Result_ZL_Comment_u {
+    pub _code: ZL_ErrorCode,
+    pub _value: ZL_Result_ZL_Comment_inner,
+    pub _error: ZL_Error,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_ZL_Comment_u() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_ZL_Comment_u> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_ZL_Comment_u>(),
+        24usize,
+        "Size of ZL_Result_ZL_Comment_u"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_ZL_Comment_u>(),
+        8usize,
+        "Alignment of ZL_Result_ZL_Comment_u"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_ZL_Comment_u::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_ZL_Comment_u::_value"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._error) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_ZL_Comment_u::_error"
+    );
+}
+pub type ZL_Result_ZL_Comment = ZL_Result_ZL_Comment_u;
+extern "C" {
+    #[link_name = "ZL_Result_ZL_Comment_extract__extern"]
+    pub fn ZL_Result_ZL_Comment_extract(
+        result: ZL_Result_ZL_Comment,
+        error: *mut ZL_Error,
+    ) -> ZL_Comment;
+}
+pub type ZL_Result_ZL_Comment_fake_type_needs_semicolon = ::std::os::raw::c_int;
+extern "C" {
+    #[doc = " @brief Gets the comment stored in the FrameInfo.\n\n @returns The comment or an error. If no comment is present it\n returns a comment with `size == 0`. The buffer returned is owned by @p zfi"]
+    pub fn ZL_FrameInfo_getComment(zfi: *const ZL_FrameInfo) -> ZL_Result_ZL_Comment;
 }
 #[doc = " @brief Information about a decompressed typed output."]
 #[repr(C)]

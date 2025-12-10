@@ -46,3 +46,4 @@ uint32_t * ZL_Output_reserveStringLens__extern(ZL_Output *output, size_t numStri
 ZL_Report ZL_Output_commit__extern(ZL_Output *output, size_t numElts) { return ZL_Output_commit(output, numElts); }
 ZL_Report ZL_Output_setIntMetadata__extern(ZL_Output *output, int key, int value) { return ZL_Output_setIntMetadata(output, key, value); }
 ZL_IntMetadata ZL_Output_getIntMetadata__extern(const ZL_Output *output, int key) { return ZL_Output_getIntMetadata(output, key); }
+ZL_Comment ZL_Result_ZL_Comment_extract__extern(const ZL_Result_ZL_Comment result, const ZL_Error *const error) { return ZL_Result_ZL_Comment_extract(result, error); }
