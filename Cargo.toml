@@ -1,9 +1,9 @@
 [package]
 name = "openzl-sys"
-version = "0.1.2+openzl.0.1.0"
+version = "0.2.0+openzl.0.2.0"
 authors = ["Lachlan Deakin <ljdgit@gmail.com>"]
 edition = "2021"
-rust-version = "1.71"
+rust-version = "1.77"
 description = "FFI bindings for OpenZL, a novel data compression framework"
 documentation = "https://docs.rs/openzl-sys"
 repository = "https://github.com/LDeakin/openzl-sys"
@@ -32,6 +32,7 @@ doctest = false
 bindgen = ["dep:bindgen"]
 
 [dependencies]
+lz4-sys = "1.11.1"
 zstd-sys = "2.0"
 
 [build-dependencies]

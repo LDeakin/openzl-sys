@@ -2,15 +2,21 @@
 
 // Static wrappers
 
+ZL_ErrorInfo ZL_EE_fromStaticErrorInfo__extern(const ZL_StaticErrorInfo *st) { return ZL_EE_fromStaticErrorInfo(st); }
 ZL_GraphID ZL_Result_ZL_GraphID_extract__extern(const ZL_Result_ZL_GraphID result, const ZL_Error *const error) { return ZL_Result_ZL_GraphID_extract(result, error); }
 ZL_NodeID ZL_Result_ZL_NodeID_extract__extern(const ZL_Result_ZL_NodeID result, const ZL_Error *const error) { return ZL_Result_ZL_NodeID_extract(result, error); }
+ZL_VoidPtr ZL_Result_ZL_VoidPtr_extract__extern(const ZL_Result_ZL_VoidPtr result, const ZL_Error *const error) { return ZL_Result_ZL_VoidPtr_extract(result, error); }
+ZL_ConstVoidPtr ZL_Result_ZL_ConstVoidPtr_extract__extern(const ZL_Result_ZL_ConstVoidPtr result, const ZL_Error *const error) { return ZL_Result_ZL_ConstVoidPtr_extract(result, error); }
 size_t ZL_Result_size_t_extract__extern(const ZL_Result_size_t result, const ZL_Error *const error) { return ZL_Result_size_t_extract(result, error); }
 int ZL_isError__extern(ZL_Report report) { return ZL_isError(report); }
 size_t ZL_validResult__extern(ZL_Report report) { return ZL_validResult(report); }
 ZL_ErrorCode ZL_errorCode__extern(ZL_Report report) { return ZL_errorCode(report); }
 ZL_Report ZL_returnValue__extern(size_t s) { return ZL_returnValue(s); }
 ZL_Report ZL_returnSuccess__extern(void) { return ZL_returnSuccess(); }
-size_t ZL_compressBound__extern(size_t totalSrcSize) { return ZL_compressBound(totalSrcSize); }
+int ZL_E_isError__extern(ZL_Error err) { return ZL_E_isError(err); }
+ZL_ErrorCode ZL_E_code__extern(ZL_Error err) { return ZL_E_code(err); }
+const char * ZL_E_codeStr__extern(ZL_Error err) { return ZL_E_codeStr(err); }
+size_t ZL_compressBound__extern(size_t totalSrcSizeInBytes) { return ZL_compressBound(totalSrcSizeInBytes); }
 const ZL_Data * ZL_codemodInputAsData__extern(const ZL_Input *input) { return ZL_codemodInputAsData(input); }
 const ZL_Input * ZL_codemodDataAsInput__extern(const ZL_Data *data) { return ZL_codemodDataAsInput(data); }
 ZL_Data * ZL_codemodMutInputAsData__extern(ZL_Input *input) { return ZL_codemodMutInputAsData(input); }
@@ -46,3 +52,4 @@ uint32_t * ZL_Output_reserveStringLens__extern(ZL_Output *output, size_t numStri
 ZL_Report ZL_Output_commit__extern(ZL_Output *output, size_t numElts) { return ZL_Output_commit(output, numElts); }
 ZL_Report ZL_Output_setIntMetadata__extern(ZL_Output *output, int key, int value) { return ZL_Output_setIntMetadata(output, key, value); }
 ZL_IntMetadata ZL_Output_getIntMetadata__extern(const ZL_Output *output, int key) { return ZL_Output_getIntMetadata(output, key); }
+ZL_Comment ZL_Result_ZL_Comment_extract__extern(const ZL_Result_ZL_Comment result, const ZL_Error *const error) { return ZL_Result_ZL_Comment_extract(result, error); }

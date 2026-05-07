@@ -1,5 +1,6 @@
 # openzl-sys
 
+[![openzl 0.2.0](https://img.shields.io/badge/openzl-0.2.0-blue)](https://github.com/facebook/openzl)
 [![Latest Version](https://img.shields.io/crates/v/openzl-sys.svg)](https://crates.io/crates/openzl-sys)
 [![openzl-sys documentation](https://docs.rs/openzl-sys/badge.svg)](https://docs.rs/openzl-sys)
 [![build](https://github.com/LDeakin/openzl-sys/actions/workflows/ci.yml/badge.svg)](https://github.com/LDeakin/openzl-sys/actions/workflows/ci.yml)
