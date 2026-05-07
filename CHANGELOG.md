@@ -17,11 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Breaking**: `ZL_E_addFrame_public()` replaced by `ZL_E_addFrame()`
   - **Breaking**: `ZL_Compressor_cloneNode()` removed
   - **Breaking**: `ZL_PipeDstCapacityFn` split into `ZL_CPipeDstCapacityFn` and `ZL_DPipeDstCapacityFn`
+  - **Breaking**: `ZL_reportError()` and `ZL_ENABLE_RET_IF_ARG_PRINTING` removed
   - Add `ZL_Comment`, `ZL_Segmenter_getOperationContext()`, `ZL_Materializer_getOperationContext()`, `ZL_RuntimeGraphParameters`, `ZL_CCtx_addHeaderComment()`, and `ZL_FrameInfo_getComment()`
   - Add dictionary and materialization bindings, including `ZL_UniqueID`, `ZL_DictID`, `ZL_MParamID`, `ZL_BundleID`, `ZL_Materializer`, `ZL_DictLoader`, `ZL_MaterializerDesc`, `ZL_MaterializerDesc2`, `ZL_MParam`, `ZL_Compressor_loadDictBundle()`, and node dictionary/MParam query helpers
   - Add decompression introspection hook bindings and `ZL_DParam_enableCodecFusion`
   - Add graph-depth, sentinel-node, LZ4, and untrained ML selector helper bindings
-  - Add additional `ZL_StandardGraphID_*`, `ZL_StandardNodeID_*`, local parameter ID, error code, and format/chunk overhead constants
+  - Add additional `ZL_StandardGraphID_*`, `ZL_StandardNodeID_*`, local parameter ID, error code, format/chunk overhead, and minimum chunk size constants
 
 ## [0.1.2+openzl.0.1.0] - 2025-10-08
 
