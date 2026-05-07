@@ -30,6 +30,9 @@ fn configure_build(build: &mut cc::Build) {
 }
 
 fn compile_openzl_cc() {
+    // Get lz4 include path from lz4-sys
+    let lz4_include = std::env::var("DEP_LZ4_INCLUDE").expect("DEP_LZ4_INCLUDE not set by lz4-sys");
+
     // Get zstd include path from zstd-sys
     let zstd_include =
         std::env::var("DEP_ZSTD_INCLUDE").expect("DEP_ZSTD_INCLUDE not set by zstd-sys");
@@ -37,6 +40,7 @@ fn compile_openzl_cc() {
     let mut build = cc::Build::new();
     configure_build(&mut build);
     build.include("openzl/src");
+    build.include(&lz4_include);
     build.include(&zstd_include);
     build.define("ZSTD_DISABLE_ASM", "1");
     // Redefine ZL_INLINE to remove 'inline' keyword, making inline functions

@@ -20,6 +20,7 @@
 #![allow(non_snake_case)]
 #![allow(rustdoc::broken_intra_doc_links)]
 
+extern crate lz4_sys;
 extern crate zstd_sys;
 
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/bindings.rs"));
