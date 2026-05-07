@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Bump MSRV to 1.77
 - Bump `openzl` to 0.2.0
   - **Breaking**: `ZL_CompressIntrospectionHooks_s` fields added / reordered
   - **Breaking**: `ZL_HAVE_FBCODE` replaced with `ZL_IS_FBCODE`
