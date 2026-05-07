@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/LDeakin/openzl-sys/compare/v0.2.0+openzl.0.2.0...HEAD)
+
+## [0.2.0+openzl.0.2.0](https://github.com/LDeakin/openzl-sys/releases/tag/v0.2.0+openzl.0.2.0) - 2026-05-08
 
 ### Added
 - Bindings for OpenZL 0.2.0 additions, including SDDL2/runtime graph support, native LZ and LZ4 graph helpers, automatic chunking constants, dictionary and materialization APIs, header comments, graph-depth/error-context helpers, decompression introspection hooks, and node dictionary/MParam query helpers.
@@ -39,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Initial release
  - OpenZL: **0.1.0** (2025-10-07)
 
-[unreleased]: https://github.com/LDeakin/openzl-sys/compare/v0.1.2+openzl.0.1.0...HEAD
 [0.1.2+openzl.0.1.0]: https://github.com/LDeakin/openzl-sys/releases/tag/v0.1.2+openzl.0.1.0
 [0.1.1+openzl.0.1.0]: https://github.com/LDeakin/openzl-sys/releases/tag/v0.1.1+openzl.0.1.0
 [0.1.0+openzl.0.1.0]: https://github.com/LDeakin/openzl-sys/releases/tag/v0.1.0+openzl.0.1.0
