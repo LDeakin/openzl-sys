@@ -7,6 +7,9 @@ ZL_GraphID ZL_Result_ZL_GraphID_extract__extern(const ZL_Result_ZL_GraphID resul
 ZL_NodeID ZL_Result_ZL_NodeID_extract__extern(const ZL_Result_ZL_NodeID result, const ZL_Error *const error) { return ZL_Result_ZL_NodeID_extract(result, error); }
 ZL_VoidPtr ZL_Result_ZL_VoidPtr_extract__extern(const ZL_Result_ZL_VoidPtr result, const ZL_Error *const error) { return ZL_Result_ZL_VoidPtr_extract(result, error); }
 ZL_ConstVoidPtr ZL_Result_ZL_ConstVoidPtr_extract__extern(const ZL_Result_ZL_ConstVoidPtr result, const ZL_Error *const error) { return ZL_Result_ZL_ConstVoidPtr_extract(result, error); }
+uint16_t ZL_Result_uint16_t_extract__extern(const ZL_Result_uint16_t result, const ZL_Error *const error) { return ZL_Result_uint16_t_extract(result, error); }
+uint32_t ZL_Result_uint32_t_extract__extern(const ZL_Result_uint32_t result, const ZL_Error *const error) { return ZL_Result_uint32_t_extract(result, error); }
+uint64_t ZL_Result_uint64_t_extract__extern(const ZL_Result_uint64_t result, const ZL_Error *const error) { return ZL_Result_uint64_t_extract(result, error); }
 size_t ZL_Result_size_t_extract__extern(const ZL_Result_size_t result, const ZL_Error *const error) { return ZL_Result_size_t_extract(result, error); }
 int ZL_isError__extern(ZL_Report report) { return ZL_isError(report); }
 size_t ZL_validResult__extern(ZL_Report report) { return ZL_validResult(report); }

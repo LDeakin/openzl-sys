@@ -94,18 +94,19 @@ pub const ZL_ErrorCode_dict_materialization__desc_str: &[u8; 35] =
     b"Dictionary materialization failure\0";
 pub const ZL_ENABLE_ERR_IF_ARG_PRINTING: u32 = 1;
 pub const ZL_LIBRARY_VERSION_MAJOR: u32 = 0;
-pub const ZL_LIBRARY_VERSION_MINOR: u32 = 2;
+pub const ZL_LIBRARY_VERSION_MINOR: u32 = 3;
 pub const ZL_LIBRARY_VERSION_PATCH: u32 = 0;
-pub const ZL_LIBRARY_VERSION_NUMBER: u32 = 200;
+pub const ZL_LIBRARY_VERSION_NUMBER: u32 = 300;
 pub const ZL_MIN_FORMAT_VERSION: u32 = 8;
-pub const ZL_MAX_FORMAT_VERSION: u32 = 24;
+pub const ZL_MAX_FORMAT_VERSION: u32 = 27;
 pub const ZL_CHUNK_VERSION_MIN: u32 = 21;
 pub const ZL_TYPED_INPUT_VERSION_MIN: u32 = 14;
+pub const ZL_MATERIALIZED_DICT_VERSION_MIN: u32 = 25;
 pub const ZL_IS_FBCODE: u32 = 0;
 pub const ZL_FBCODE_IS_RELEASE: u32 = 0;
 pub const ZL_MIN_CHUNK_SIZE: u32 = 32768;
 pub const ZL_CHUNK_OVERHEAD_MAX: u32 = 16;
-pub const ZL_FRAME_OVERHEAD_MAX: u32 = 32;
+pub const ZL_FRAME_OVERHEAD_MAX: u32 = 64;
 pub const ZL_COMPRESSIONLEVEL_DEFAULT: u32 = 6;
 pub const ZL_DECOMPRESSIONLEVEL_DEFAULT: u32 = 3;
 pub const ZL_MINSTREAMSIZE_DEFAULT: u32 = 10;
@@ -116,6 +117,8 @@ pub const ZL_DISPATCH_CHANNEL_ID: u32 = 83;
 pub const ZL_DISPATCH_STRING_NUM_OUTPUTS_PID: u32 = 47;
 pub const ZL_DISPATCH_STRING_INDICES_PID: u32 = 48;
 pub const ZL_DIVIDE_BY_PID: u32 = 112;
+pub const ZL_ENTROPY_MIN_GAIN_BYTES_PID: u32 = 66;
+pub const ZL_ENTROPY_MIN_GAIN_PCT_PID: u32 = 80;
 pub const ZL_FIELD_LZ_COMPRESSION_LEVEL_OVERRIDE_PID: u32 = 181;
 pub const ZL_FIELD_LZ_LITERALS_GRAPH_OVERRIDE_INDEX_PID: u32 = 0;
 pub const ZL_FIELD_LZ_TOKENS_GRAPH_OVERRIDE_INDEX_PID: u32 = 1;
@@ -123,12 +126,27 @@ pub const ZL_FIELD_LZ_OFFSETS_GRAPH_OVERRIDE_INDEX_PID: u32 = 2;
 pub const ZL_FIELD_LZ_EXTRA_LITERAL_LENGTHS_GRAPH_OVERRIDE_INDEX_PID: u32 = 3;
 pub const ZL_FIELD_LZ_EXTRA_MATCH_LENGTHS_GRAPH_OVERRIDE_INDEX_PID: u32 = 4;
 pub const ZL_LZ_MIN_MATCH_LENGTH_METADATA_ID: u32 = 77;
+pub const ZL_LZPARAM_WINDOWLOG_MIN: u32 = 10;
+pub const ZL_LZPARAM_WINDOWLOG_MAX: u32 = 28;
+pub const ZL_LZPARAM_ACCELERATION_MIN: u32 = 1;
+pub const ZL_LZPARAM_ACCELERATION_MAX: u32 = 10000;
+pub const ZL_LZPARAM_HASHLOG1_MIN: u32 = 10;
+pub const ZL_LZPARAM_HASHLOG1_MAX: u32 = 23;
+pub const ZL_LZPARAM_HASHLOG2_MIN: u32 = 10;
+pub const ZL_LZPARAM_HASHLOG2_MAX: u32 = 23;
+pub const ZL_LZPARAM_HASHLENGTH_MIN: u32 = 4;
+pub const ZL_LZPARAM_HASHLENGTH_MAX: u32 = 7;
+pub const ZL_LZPARAM_SEARCHLOG_MIN: u32 = 1;
+pub const ZL_LZPARAM_SEARCHLOG_MAX: u32 = 4;
+pub const ZL_LZPARAM_COMPRESSIONLEVEL_MIN: i32 = -10000;
+pub const ZL_LZPARAM_COMPRESSIONLEVEL_MAX: u32 = 7;
 pub const ZL_LZ4_COMPRESSION_LEVEL_OVERRIDE_PID: u32 = 0;
 pub const ZL_MUX_LENGTHS_SPLIT_POINT_PID: u32 = 0;
 pub const ZL_MUX_LENGTHS_MATCH_LENGTH_BIAS_PID: u32 = 1;
 pub const ZL_SDDL_DESCRIPTION_PID: u32 = 522;
 pub const ZL_SENTINEL_INDICES_PID: u32 = 130;
 pub const ZL_SENTINEL_VALUE_PID: u32 = 131;
+pub const ZL_SPARSE_NUM_DOMINANT_VALUE_PID: u32 = 132;
 pub const ZL_SPLIT_BYRANGE_MIN_SEGMENT_SIZE_PID: u32 = 324;
 pub const ZL_SPLIT_CHANNEL_ID: u32 = 867;
 pub const ZL_TOKENIZE_SORT_PID: u32 = 0;
@@ -504,6 +522,12 @@ pub struct ZL_DictLoader_s {
     _unused: [u8; 0],
 }
 pub type ZL_DictLoader = ZL_DictLoader_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_FatBundleDictLoader_s {
+    _unused: [u8; 0],
+}
+pub type ZL_FatBundleDictLoader = ZL_FatBundleDictLoader_s;
 pub const ZL_TernaryParam_auto: ZL_TernaryParam = 0;
 pub const ZL_TernaryParam_enable: ZL_TernaryParam = 1;
 pub const ZL_TernaryParam_disable: ZL_TernaryParam = 2;
@@ -864,6 +888,13 @@ extern "C" {
         opCtx: *mut ZL_OperationContext,
     ) -> *mut ZL_ErrorContext;
 }
+extern "C" {
+    #[doc = " @returns true iff the provided rich error info in @p error is owned by this\n          operation context and is still live."]
+    pub fn ZL_OperationContext_ownsError(
+        opCtx: *const ZL_OperationContext,
+        error: *mut ZL_Error,
+    ) -> bool;
+}
 #[doc = " ZL_StaticErrorInfo *"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1043,6 +1074,10 @@ fn bindgen_test_layout_ZL_Error_Array() {
         8usize,
         "Offset of field: ZL_Error_Array::size"
     );
+}
+extern "C" {
+    #[doc = " You can however clear out the error info pointer to help avoid errors when\n the context object has been freed."]
+    pub fn ZL_E_clearInfo(err: *mut ZL_Error);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1362,6 +1397,231 @@ extern "C" {
 pub type ZL_Result_ZL_ConstVoidPtr_fake_type_needs_semicolon = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct ZL_Result_uint16_t_inner {
+    pub _code: ZL_ErrorCode,
+    pub _value: u16,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_uint16_t_inner() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_uint16_t_inner> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_uint16_t_inner>(),
+        8usize,
+        "Size of ZL_Result_uint16_t_inner"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_uint16_t_inner>(),
+        4usize,
+        "Alignment of ZL_Result_uint16_t_inner"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint16_t_inner::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        4usize,
+        "Offset of field: ZL_Result_uint16_t_inner::_value"
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ZL_Result_uint16_t_u {
+    pub _code: ZL_ErrorCode,
+    pub _value: ZL_Result_uint16_t_inner,
+    pub _error: ZL_Error,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_uint16_t_u() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_uint16_t_u> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_uint16_t_u>(),
+        16usize,
+        "Size of ZL_Result_uint16_t_u"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_uint16_t_u>(),
+        8usize,
+        "Alignment of ZL_Result_uint16_t_u"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint16_t_u::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint16_t_u::_value"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._error) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint16_t_u::_error"
+    );
+}
+pub type ZL_Result_uint16_t = ZL_Result_uint16_t_u;
+extern "C" {
+    #[link_name = "ZL_Result_uint16_t_extract__extern"]
+    pub fn ZL_Result_uint16_t_extract(result: ZL_Result_uint16_t, error: *mut ZL_Error) -> u16;
+}
+pub type ZL_Result_uint16_t_fake_type_needs_semicolon = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_Result_uint32_t_inner {
+    pub _code: ZL_ErrorCode,
+    pub _value: u32,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_uint32_t_inner() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_uint32_t_inner> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_uint32_t_inner>(),
+        8usize,
+        "Size of ZL_Result_uint32_t_inner"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_uint32_t_inner>(),
+        4usize,
+        "Alignment of ZL_Result_uint32_t_inner"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint32_t_inner::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        4usize,
+        "Offset of field: ZL_Result_uint32_t_inner::_value"
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ZL_Result_uint32_t_u {
+    pub _code: ZL_ErrorCode,
+    pub _value: ZL_Result_uint32_t_inner,
+    pub _error: ZL_Error,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_uint32_t_u() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_uint32_t_u> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_uint32_t_u>(),
+        16usize,
+        "Size of ZL_Result_uint32_t_u"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_uint32_t_u>(),
+        8usize,
+        "Alignment of ZL_Result_uint32_t_u"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint32_t_u::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint32_t_u::_value"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._error) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint32_t_u::_error"
+    );
+}
+pub type ZL_Result_uint32_t = ZL_Result_uint32_t_u;
+extern "C" {
+    #[link_name = "ZL_Result_uint32_t_extract__extern"]
+    pub fn ZL_Result_uint32_t_extract(result: ZL_Result_uint32_t, error: *mut ZL_Error) -> u32;
+}
+pub type ZL_Result_uint32_t_fake_type_needs_semicolon = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_Result_uint64_t_inner {
+    pub _code: ZL_ErrorCode,
+    pub _value: u64,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_uint64_t_inner() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_uint64_t_inner> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_uint64_t_inner>(),
+        16usize,
+        "Size of ZL_Result_uint64_t_inner"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_uint64_t_inner>(),
+        8usize,
+        "Alignment of ZL_Result_uint64_t_inner"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint64_t_inner::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        8usize,
+        "Offset of field: ZL_Result_uint64_t_inner::_value"
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ZL_Result_uint64_t_u {
+    pub _code: ZL_ErrorCode,
+    pub _value: ZL_Result_uint64_t_inner,
+    pub _error: ZL_Error,
+}
+#[test]
+fn bindgen_test_layout_ZL_Result_uint64_t_u() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_Result_uint64_t_u> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_Result_uint64_t_u>(),
+        16usize,
+        "Size of ZL_Result_uint64_t_u"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_Result_uint64_t_u>(),
+        8usize,
+        "Alignment of ZL_Result_uint64_t_u"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._code) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint64_t_u::_code"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._value) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint64_t_u::_value"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr)._error) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_Result_uint64_t_u::_error"
+    );
+}
+pub type ZL_Result_uint64_t = ZL_Result_uint64_t_u;
+extern "C" {
+    #[link_name = "ZL_Result_uint64_t_extract__extern"]
+    pub fn ZL_Result_uint64_t_extract(result: ZL_Result_uint64_t, error: *mut ZL_Error) -> u64;
+}
+pub type ZL_Result_uint64_t_fake_type_needs_semicolon = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct ZL_Result_size_t_inner {
     pub _code: ZL_ErrorCode,
     pub _value: usize,
@@ -1479,6 +1739,40 @@ extern "C" {
 extern "C" {
     #[link_name = "ZL_E_codeStr__extern"]
     pub fn ZL_E_codeStr(err: ZL_Error) -> *const ::std::os::raw::c_char;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_CodecOutputCache_s {
+    _unused: [u8; 0],
+}
+#[doc = " Memoizes deterministic standard-codec invocations.\n\n A cache is disabled until attached to a compression context with\n ZL_CCtx_setCodecOutputCache(). Cache hits reproduce the same codec outputs\n and transform header without invoking the codec again. Custom codecs,\n dictionary-backed codecs, codecs with reference or materialized parameters,\n codecs consuming or producing string streams, and codecs that do not take\n exactly one input are not cached. Non-single-input invocations run normally\n without a cache lookup or insertion.\n\n Copy parameters are keyed by their copied bytes only. State reachable\n through pointers embedded in those bytes is not part of the key.\n Callback-backed parameterized standard nodes, including custom tokenize and\n dispatch nodes, are therefore unsupported.\n\n The cache is mutable and single-writer. It may be reused by multiple\n compression contexts sequentially, but must not be used concurrently."]
+pub type ZL_CodecOutputCache = ZL_CodecOutputCache_s;
+extern "C" {
+    #[doc = " Creates an empty cache with the default 256 MiB entry-payload budget."]
+    pub fn ZL_CodecOutputCache_create() -> *mut ZL_CodecOutputCache;
+}
+extern "C" {
+    #[doc = " Creates an empty cache with the specified entry-payload budget.\n Zero creates a live cache that cannot store entries; cacheable invocations\n still perform hashing and lookups when it is attached. Reaching @p maxBytes\n skips new entries; it does not fail compression."]
+    pub fn ZL_CodecOutputCache_createWithBudget(maxBytes: usize) -> *mut ZL_CodecOutputCache;
+}
+extern "C" {
+    #[doc = " Frees a cache and all stored entries. Accepts NULL."]
+    pub fn ZL_CodecOutputCache_free(cache: *mut ZL_CodecOutputCache);
+}
+extern "C" {
+    #[doc = " Drops all cached results. Accepts NULL."]
+    pub fn ZL_CodecOutputCache_reset(cache: *mut ZL_CodecOutputCache);
+}
+extern "C" {
+    #[doc = " Sets the entry-payload budget for the private cache used automatically by\n tryGraph. Automatic caching is disabled by default. A positive value enables\n it with the specified budget; zero disables it.\n\n Changing the budget drops the existing private cache. Call this function\n only between compressions. The setting persists until changed or the\n context is freed; ZL_CParam_stickyParameters and ZL_CCtx_resetParameters()\n do not affect it. A caller-attached cache is unaffected and remains active."]
+    pub fn ZL_CCtx_setTryGraphCacheBudget(cctx: *mut ZL_CCtx, maxBytes: usize) -> ZL_Report;
+}
+extern "C" {
+    #[doc = " Attaches a borrowed cache to @p cctx. Passing NULL detaches it; automatic\n tryGraph caching remains controlled by ZL_CCtx_setTryGraphCacheBudget(). The\n cache must outlive every compression that uses the context."]
+    pub fn ZL_CCtx_setCodecOutputCache(
+        cctx: *mut ZL_CCtx,
+        cache: *mut ZL_CodecOutputCache,
+    ) -> ZL_Report;
 }
 pub const ZL_Type_serial: ZL_Type = 1;
 pub const ZL_Type_struct: ZL_Type = 2;
@@ -2340,6 +2634,121 @@ extern "C" {
     pub fn ZL_TypedRef_free(tref: *mut ZL_TypedRef);
 }
 extern "C" {
+    #[doc = " No-op dematerialization function.\n Use this as a placeholder when there are no resources or memory to free."]
+    pub fn ZL_NOOP_DEMATERIALIZE(
+        matCtx: *mut ZL_Materializer,
+        materialized: *mut ::std::os::raw::c_void,
+    );
+}
+extern "C" {
+    #[doc = " Managed space allocation (Materializers ONLY):\n Materialization may request arena space to hold materialized objects. It is\n allowed to request multiple buffers of any size. Returned buffers are not\n initialized, and cannot be freed individually. All buffers are\n automatically released at end of the owning @ref ZL_Compressor's lifetime.\n\n @note Always returns NULL during dematerialization."]
+    pub fn ZL_Materializer_allocate(
+        matCtx: *mut ZL_Materializer,
+        size: usize,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Scratch space allocation (Materializers ONLY):\n When the materializer needs some buffer space for some local operation,\n it can request such space from the engine. It is allowed to\n request multiple buffers of any size. Returned buffers are not\n initialized, and cannot be freed individually. All scratch buffers are\n automatically released at the end of the materializer's execution.\n\n @note Always returns NULL during dematerialization."]
+    pub fn ZL_Materializer_getScratchSpace(
+        matCtx: *mut ZL_Materializer,
+        size: usize,
+    ) -> *mut ::std::os::raw::c_void;
+}
+#[doc = " @brief Descriptor for materializing and dematerializing resource objects\n (dicts and MParams).\n\n Defines functions to create an in-memory object from a raw source buffer\n (materializeFn) and to free that object (dematerializeFn). Used for both\n dictionary objects (required at compression and decompression) and MParam\n objects (compression-only). Note that the registration APIs allow for\n different materializers for compression-time and decompression-time dict\n materialization."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_MaterializerDesc {
+    #[doc = " @brief A custom function that materializes an in-memory object from a\n provided @p src buffer. Separate function interfaces are provided for\n compression-time and decompression-time materialization. These can be the\n same function or different functions, depending on the specific codec\n implementation.\n\n The generation MUST be deterministic and hermetic. Materialization shall\n not depend on variables other than the provided @p src buffer.\n\n Materialized object lifetimes will be managed by the @ref ZL_DictLoader\n or @ref ZL_Compressor on which the materialization scheme is registered.\n\n Do NOT rely on the materialization function being called at any specific\n time to do side-effect work. Doing so will result in undefined behavior.\n\n DO NOT attempt to modify the materialized object after creation, either\n directly or via API getters.\n\n @param matCtx A pointer to a materializer context object. The\n materialization function may use this to request managed memory as an\n alternative to managing allocations itself and via the dematerializeFn.\n @param src  A pointer to the buffer from which to materialize. The\n provided buffer has no lifetime guarantees past the invocation of this\n function. You may not hold references into @p src in the materialized\n object.\n\n @returns A ZL_RESULT containing a pointer to the materialized object on\n success, or an error. Returning NULL as a valid result (when there's\n nothing to materialize) should be wrapped in ZL_WRAP_VALUE(NULL). Ensure\n the function declares a result scope with ZL_RESULT_DECLARE_SCOPE or you\n will get a compiler error."]
+    pub materializeFn: ::std::option::Option<
+        unsafe extern "C" fn(
+            matCtx: *mut ZL_Materializer,
+            src: *const ::std::os::raw::c_void,
+            srcSize: usize,
+        ) -> ZL_Result_ZL_VoidPtr,
+    >,
+    #[doc = " @brief A custom function that destructs a materialized object.\n\n You should use this to deallocate all non-arena memory and free any held\n resources. As a convenience, if there are no resources or memory to free,\n you may use ZL_NOOP_DEMATERIALIZE as a placeholder."]
+    pub dematerializeFn: ::std::option::Option<
+        unsafe extern "C" fn(
+            matCtx: *mut ZL_Materializer,
+            materialized: *mut ::std::os::raw::c_void,
+        ),
+    >,
+    #[doc = " Optionally an opaque pointer that can be queried with\n ZL_Materializer_getOpaquePtr().\n OpenZL unconditionally takes ownership of this pointer, even if\n registration fails, and it lives for the lifetime of the owning\n compressor/dict store."]
+    pub opaque: ZL_OpaquePtr,
+}
+#[test]
+fn bindgen_test_layout_ZL_MaterializerDesc() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_MaterializerDesc> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_MaterializerDesc>(),
+        40usize,
+        "Size of ZL_MaterializerDesc"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_MaterializerDesc>(),
+        8usize,
+        "Alignment of ZL_MaterializerDesc"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).materializeFn) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_MaterializerDesc::materializeFn"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).dematerializeFn) as usize - ptr as usize },
+        8usize,
+        "Offset of field: ZL_MaterializerDesc::dematerializeFn"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
+        16usize,
+        "Offset of field: ZL_MaterializerDesc::opaque"
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ZL_MParam {
+    pub content: *const ::std::os::raw::c_void,
+    pub size: usize,
+    #[doc = " For advanced use cases, you can specify a custom ID for this MParam. If\n unset, a default ID will be assigned."]
+    pub mparamID: ZL_MParamID,
+}
+#[test]
+fn bindgen_test_layout_ZL_MParam() {
+    const UNINIT: ::std::mem::MaybeUninit<ZL_MParam> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<ZL_MParam>(),
+        48usize,
+        "Size of ZL_MParam"
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ZL_MParam>(),
+        8usize,
+        "Alignment of ZL_MParam"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).content) as usize - ptr as usize },
+        0usize,
+        "Offset of field: ZL_MParam::content"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).size) as usize - ptr as usize },
+        8usize,
+        "Offset of field: ZL_MParam::size"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).mparamID) as usize - ptr as usize },
+        16usize,
+        "Offset of field: ZL_MParam::mparamID"
+    );
+}
+extern "C" {
+    #[doc = " @returns true if @p id is non-NULL and not ZL_MPARAM_ID_NULL."]
+    pub fn ZL_MParamID_hasValue(id: *const ZL_MParamID) -> bool;
+}
+extern "C" {
     #[doc = " Inserts a placeholder for the Automated Compressor Explorer (ACE) to\n replace with an automatically generated graph. It accepts a single input of\n any type.\n\n Before training, this graph will just forward to `ZL_GRAPH_COMPRESS_GENERIC`.\n After training the top-level graph, ACE will replace this component with an\n automatically generated graph that performs well on the training data.\n\n If the same ACE GraphID is used multiple times within a graph, all the inputs\n get passed to the same training, and only a single graph is generated. If\n there are multiple ACE graphs in a top-level graph, each created with a call\n to `ZL_Compressor_buildACEGraph()`, then each unique GraphID will be replaced\n with a trained graph optimized for the inputs passed to that specific\n GraphID.\n\n Input 0: Any type\n\n @returns The placeholder ACE graphID."]
     pub fn ZL_Compressor_buildACEGraph(compressor: *mut ZL_Compressor) -> ZL_GraphID;
 }
@@ -2365,30 +2774,34 @@ pub const ZL_StandardGraphID_illegal: ZL_StandardGraphID = 0;
 pub const ZL_StandardGraphID_store: ZL_StandardGraphID = 2;
 pub const ZL_StandardGraphID_fse: ZL_StandardGraphID = 3;
 pub const ZL_StandardGraphID_huffman: ZL_StandardGraphID = 4;
-pub const ZL_StandardGraphID_entropy: ZL_StandardGraphID = 5;
-pub const ZL_StandardGraphID_constant: ZL_StandardGraphID = 6;
-pub const ZL_StandardGraphID_zstd: ZL_StandardGraphID = 7;
-pub const ZL_StandardGraphID_bitpack: ZL_StandardGraphID = 8;
-pub const ZL_StandardGraphID_flatpack: ZL_StandardGraphID = 9;
-pub const ZL_StandardGraphID_field_lz: ZL_StandardGraphID = 10;
-pub const ZL_StandardGraphID_compress_generic: ZL_StandardGraphID = 11;
-pub const ZL_StandardGraphID_select_generic_lz_backend: ZL_StandardGraphID = 12;
-pub const ZL_StandardGraphID_segment_numeric: ZL_StandardGraphID = 13;
-pub const ZL_StandardGraphID_select_numeric: ZL_StandardGraphID = 14;
-pub const ZL_StandardGraphID_ml_selector: ZL_StandardGraphID = 15;
-pub const ZL_StandardGraphID_clustering: ZL_StandardGraphID = 16;
-pub const ZL_StandardGraphID_try_parse_int: ZL_StandardGraphID = 17;
-pub const ZL_StandardGraphID_simple_data_description_language: ZL_StandardGraphID = 18;
-pub const ZL_StandardGraphID_simple_data_description_language_v2: ZL_StandardGraphID = 19;
-pub const ZL_StandardGraphID_lz4: ZL_StandardGraphID = 20;
-pub const ZL_StandardGraphID_partition_bitpack: ZL_StandardGraphID = 21;
-pub const ZL_StandardGraphID_segment_num8_from_serial: ZL_StandardGraphID = 22;
-pub const ZL_StandardGraphID_segment_num16_from_serial: ZL_StandardGraphID = 23;
-pub const ZL_StandardGraphID_segment_num32_from_serial: ZL_StandardGraphID = 24;
-pub const ZL_StandardGraphID_segment_num64_from_serial: ZL_StandardGraphID = 25;
-pub const ZL_StandardGraphID_lz: ZL_StandardGraphID = 26;
-pub const ZL_StandardGraphID_segment_serial: ZL_StandardGraphID = 27;
-pub const ZL_StandardGraphID_public_end: ZL_StandardGraphID = 28;
+pub const ZL_StandardGraphID_huffman_huf0: ZL_StandardGraphID = 5;
+pub const ZL_StandardGraphID_huffman_pivco: ZL_StandardGraphID = 6;
+pub const ZL_StandardGraphID_entropy: ZL_StandardGraphID = 7;
+pub const ZL_StandardGraphID_constant: ZL_StandardGraphID = 8;
+pub const ZL_StandardGraphID_zstd: ZL_StandardGraphID = 9;
+pub const ZL_StandardGraphID_bitpack: ZL_StandardGraphID = 10;
+pub const ZL_StandardGraphID_flatpack: ZL_StandardGraphID = 11;
+pub const ZL_StandardGraphID_field_lz: ZL_StandardGraphID = 12;
+pub const ZL_StandardGraphID_compress_generic: ZL_StandardGraphID = 13;
+pub const ZL_StandardGraphID_select_generic_lz_backend: ZL_StandardGraphID = 14;
+pub const ZL_StandardGraphID_segment_numeric: ZL_StandardGraphID = 15;
+pub const ZL_StandardGraphID_select_numeric: ZL_StandardGraphID = 16;
+pub const ZL_StandardGraphID_ml_selector: ZL_StandardGraphID = 17;
+pub const ZL_StandardGraphID_clustering: ZL_StandardGraphID = 18;
+pub const ZL_StandardGraphID_try_parse_int: ZL_StandardGraphID = 19;
+pub const ZL_StandardGraphID_simple_data_description_language: ZL_StandardGraphID = 20;
+pub const ZL_StandardGraphID_simple_data_description_language_v2: ZL_StandardGraphID = 21;
+pub const ZL_StandardGraphID_lz4: ZL_StandardGraphID = 22;
+pub const ZL_StandardGraphID_partition_bitpack: ZL_StandardGraphID = 23;
+pub const ZL_StandardGraphID_segment_num8_from_serial: ZL_StandardGraphID = 24;
+pub const ZL_StandardGraphID_segment_num16_from_serial: ZL_StandardGraphID = 25;
+pub const ZL_StandardGraphID_segment_num32_from_serial: ZL_StandardGraphID = 26;
+pub const ZL_StandardGraphID_segment_num64_from_serial: ZL_StandardGraphID = 27;
+pub const ZL_StandardGraphID_lz: ZL_StandardGraphID = 28;
+pub const ZL_StandardGraphID_segment_serial: ZL_StandardGraphID = 29;
+pub const ZL_StandardGraphID_transformer_numeric: ZL_StandardGraphID = 30;
+pub const ZL_StandardGraphID_brute_force: ZL_StandardGraphID = 31;
+pub const ZL_StandardGraphID_public_end: ZL_StandardGraphID = 32;
 pub type ZL_StandardGraphID = ::std::os::raw::c_uint;
 pub const ZL_StandardNodeID_illegal: ZL_StandardNodeID = 0;
 pub const ZL_StandardNodeID_delta_int: ZL_StandardNodeID = 2;
@@ -2443,7 +2856,9 @@ pub const ZL_StandardNodeID_sentinel_byte: ZL_StandardNodeID = 50;
 pub const ZL_StandardNodeID_sentinel_num: ZL_StandardNodeID = 51;
 pub const ZL_StandardNodeID_lz: ZL_StandardNodeID = 52;
 pub const ZL_StandardNodeID_mux_lengths: ZL_StandardNodeID = 53;
-pub const ZL_StandardNodeID_public_end: ZL_StandardNodeID = 54;
+pub const ZL_StandardNodeID_sparse_num: ZL_StandardNodeID = 54;
+pub const ZL_StandardNodeID_sparse_num_auto: ZL_StandardNodeID = 55;
+pub const ZL_StandardNodeID_public_end: ZL_StandardNodeID = 56;
 pub type ZL_StandardNodeID = ::std::os::raw::c_uint;
 pub const ZL_Bitunpack_numBits: _bindgen_ty_1 = 1;
 pub type _bindgen_ty_1 = ::std::os::raw::c_uint;
@@ -2454,12 +2869,12 @@ extern "C" {
     ) -> ZL_NodeID;
 }
 extern "C" {
-    #[doc = " Parameterized brute force selector that selects the best successor from a\n user-provided list of candidates.\n @param successors the list of successors to select from. Each successor must\n be equipped to handle the input stream type."]
-    pub fn ZL_Compressor_registerBruteForceSelectorGraph(
+    #[doc = " Parameterized brute force selector that selects the best successor from a\n user-provided list of candidates.\n @param successors the list of successors to select from. Successors that\n can't handle the input stream type are skipped; if none apply the selector\n falls back to @ref ZL_GRAPH_STORE.\n @returns @ref ZL_GRAPH_BRUTE_FORCE parameterized with @p successors."]
+    pub fn ZL_Compressor_buildBruteForceSelectorGraph(
         cgraph: *mut ZL_Compressor,
         successors: *const ZL_GraphID,
         numSuccessors: usize,
-    ) -> ZL_GraphID;
+    ) -> ZL_Result_ZL_GraphID;
 }
 extern "C" {
     #[link_name = "ZL_codemodInputAsData__extern"]
@@ -2535,182 +2950,6 @@ extern "C" {
         value: ::std::os::raw::c_int,
     ) -> ZL_Report;
 }
-#[doc = " @brief Descriptor for materializing and dematerializing local params\n\n This structure defines functions to materialize an in-memory object from\n local parameters and to dematerialize (free) that object.\n\n Materialized objects are available as a @ref ZL_RefParam via the typical\n local params access methods. Specify the retrieval key with the paramId\n field."]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct ZL_MaterializerDesc_s {
-    #[doc = " @brief A custom function that materializes an in-memory object from a\n provided @p params object.\n\n This function may arbitrarily use none, any, or all of the provided\n local params to generate the materialized object, but the generation\n MUST be deterministic and hermetic. In particular, materialization shall\n not depend on variables other than the provided @ref ZL_LocalParams\n object.\n\n Materialized object lifetimes will be managed by the @ref ZL_Compressor\n on which the node is registered/parameterized. Objects will be\n materialized around the time of node registration/parameterization and\n will remain allocated for the lifetime of the associated @ref\n ZL_Compressor.\n\n Do NOT rely on the materialization function being called at any specific\n time to do side-effect work. Doing so will result in undefined behavior.\n\n The @ref ZL_Compressor may arbitrarily share the same materialized object\n between multiple nodes with the same @p params and the @ref ZL_CCtx may\n provide concurrent access to materialized objects. DO NOT attempt to\n modify the materialized object after creation, either directly or via API\n getters.\n\n @param matCtx A pointer to a materializer context object associated with\n the @ref ZL_Compressor. The materialization function may use this to\n request managed memory from the ZL_Compressor as an alternative to\n managing allocations itself and via the dematerializeFn.\n @param params  A pointer to the local params object to materialize. The\n provided params have no lifetime guarantees past the invocation of this\n function. You may not hold references into the params object in the\n materialized object.\n\n @returns A ZL_RESULT containing a pointer to the materialized object on\n success, or an error. Returning NULL as a valid result (when there's\n nothing to materialize) should be wrapped in ZL_WRAP_VALUE(NULL). Ensure\n the function declares a result scope with ZL_RESULT_DECLARE_SCOPE or you\n will get a compiler error."]
-    pub materializeFn: ::std::option::Option<
-        unsafe extern "C" fn(
-            matCtx: *mut ZL_Materializer,
-            params: *const ZL_LocalParams,
-        ) -> ZL_Result_ZL_VoidPtr,
-    >,
-    #[doc = " @brief A custom function that destructs a materialized object.\n\n You should use this to deallocate all non-arena memory and free any held\n resources. As a convenience, if there are no resources or memory to free,\n you may use ZL_NOOP_DEMATERIALIZE as a placeholder."]
-    pub dematerializeFn: ::std::option::Option<
-        unsafe extern "C" fn(
-            matCtx: *mut ZL_Materializer,
-            materialized: *mut ::std::os::raw::c_void,
-        ),
-    >,
-    #[doc = " The paramId to use for the materialized param. If there is an existing\n param that uses this paramId, the registration will fail."]
-    pub paramId: ::std::os::raw::c_int,
-    #[doc = " Optionally an opaque pointer that can be queried with\n ZL_Materializer_getOpaquePtr(). OpenZL does not take ownership of this\n pointer. If lifetime extension is needed, it should be managed by the\n `ZL_OpaquePtr` in the outer `ZL_MIEncoderDesc`."]
-    pub opaque: *const ::std::os::raw::c_void,
-}
-#[test]
-fn bindgen_test_layout_ZL_MaterializerDesc_s() {
-    const UNINIT: ::std::mem::MaybeUninit<ZL_MaterializerDesc_s> =
-        ::std::mem::MaybeUninit::uninit();
-    let ptr = UNINIT.as_ptr();
-    assert_eq!(
-        ::std::mem::size_of::<ZL_MaterializerDesc_s>(),
-        32usize,
-        "Size of ZL_MaterializerDesc_s"
-    );
-    assert_eq!(
-        ::std::mem::align_of::<ZL_MaterializerDesc_s>(),
-        8usize,
-        "Alignment of ZL_MaterializerDesc_s"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).materializeFn) as usize - ptr as usize },
-        0usize,
-        "Offset of field: ZL_MaterializerDesc_s::materializeFn"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).dematerializeFn) as usize - ptr as usize },
-        8usize,
-        "Offset of field: ZL_MaterializerDesc_s::dematerializeFn"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).paramId) as usize - ptr as usize },
-        16usize,
-        "Offset of field: ZL_MaterializerDesc_s::paramId"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
-        24usize,
-        "Offset of field: ZL_MaterializerDesc_s::opaque"
-    );
-}
-#[doc = " @brief Descriptor for materializing and dematerializing local params\n\n This structure defines functions to materialize an in-memory object from\n local parameters and to dematerialize (free) that object.\n\n Materialized objects are available as a @ref ZL_RefParam via the typical\n local params access methods. Specify the retrieval key with the paramId\n field."]
-pub type ZL_MaterializerDesc = ZL_MaterializerDesc_s;
-extern "C" {
-    #[doc = " No-op dematerialization function.\n Use this as a placeholder when there are no resources or memory to free."]
-    pub fn ZL_NOOP_DEMATERIALIZE(
-        matCtx: *mut ZL_Materializer,
-        materialized: *mut ::std::os::raw::c_void,
-    );
-}
-extern "C" {
-    #[doc = " Managed space allocation (Materializers ONLY):\n Materialization may request arena space to hold materialized objects. It is\n allowed to request multiple buffers of any size. Returned buffers are not\n initialized, and cannot be freed individually. All buffers are\n automatically released at end of the owning @ref ZL_Compressor's lifetime.\n\n @note Always returns NULL during dematerialization."]
-    pub fn ZL_Materializer_allocate(
-        matCtx: *mut ZL_Materializer,
-        size: usize,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " Scratch space allocation (Materializers ONLY):\n When the materializer needs some buffer space for some local operation,\n it can request such space from the engine. It is allowed to\n request multiple buffers of any size. Returned buffers are not\n initialized, and cannot be freed individually. All scratch buffers are\n automatically released at the end of the materializer's execution.\n\n @note Always returns NULL during dematerialization."]
-    pub fn ZL_Materializer_getScratchSpace(
-        matCtx: *mut ZL_Materializer,
-        size: usize,
-    ) -> *mut ::std::os::raw::c_void;
-}
-#[doc = " @brief Descriptor for materializing and dematerializing resource objects\n (dicts and MParams).\n\n Defines functions to create an in-memory object from a raw source buffer\n (materializeFn) and to free that object (dematerializeFn). Used for both\n dictionary objects (required at compression and decompression) and MParam\n objects (compression-only). Note that the registration APIs allow for\n different materializers for compression-time and decompression-time dict\n materialization."]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct ZL_MaterializerDesc2 {
-    #[doc = " @brief A custom function that materializes an in-memory object from a\n provided @p src buffer. Separate function interfaces are provided for\n compression-time and decompression-time materialization. These can be the\n same function or different functions, depending on the specific codec\n implementation.\n\n The generation MUST be deterministic and hermetic. Materialization shall\n not depend on variables other than the provided @p src buffer.\n\n Materialized object lifetimes will be managed by the @ref ZL_DictLoader\n or @ref ZL_Compressor on which the materialization scheme is registered.\n\n Do NOT rely on the materialization function being called at any specific\n time to do side-effect work. Doing so will result in undefined behavior.\n\n DO NOT attempt to modify the materialized object after creation, either\n directly or via API getters.\n\n @param matCtx A pointer to a materializer context object. The\n materialization function may use this to request managed memory as an\n alternative to managing allocations itself and via the dematerializeFn.\n @param src  A pointer to the buffer from which to materialize. The\n provided buffer has no lifetime guarantees past the invocation of this\n function. You may not hold references into @p src in the materialized\n object.\n\n @returns A ZL_RESULT containing a pointer to the materialized object on\n success, or an error. Returning NULL as a valid result (when there's\n nothing to materialize) should be wrapped in ZL_WRAP_VALUE(NULL). Ensure\n the function declares a result scope with ZL_RESULT_DECLARE_SCOPE or you\n will get a compiler error."]
-    pub materializeFn: ::std::option::Option<
-        unsafe extern "C" fn(
-            matCtx: *mut ZL_Materializer,
-            src: *const ::std::os::raw::c_void,
-            srcSize: usize,
-        ) -> ZL_Result_ZL_VoidPtr,
-    >,
-    #[doc = " @brief A custom function that destructs a materialized object.\n\n You should use this to deallocate all non-arena memory and free any held\n resources. As a convenience, if there are no resources or memory to free,\n you may use ZL_NOOP_DEMATERIALIZE as a placeholder."]
-    pub dematerializeFn: ::std::option::Option<
-        unsafe extern "C" fn(
-            matCtx: *mut ZL_Materializer,
-            materialized: *mut ::std::os::raw::c_void,
-        ),
-    >,
-    #[doc = " Optionally an opaque pointer that can be queried with\n ZL_Materializer_getOpaquePtr().\n OpenZL unconditionally takes ownership of this pointer, even if\n registration fails, and it lives for the lifetime of the owning\n compressor/dict store."]
-    pub opaque: ZL_OpaquePtr,
-}
-#[test]
-fn bindgen_test_layout_ZL_MaterializerDesc2() {
-    const UNINIT: ::std::mem::MaybeUninit<ZL_MaterializerDesc2> = ::std::mem::MaybeUninit::uninit();
-    let ptr = UNINIT.as_ptr();
-    assert_eq!(
-        ::std::mem::size_of::<ZL_MaterializerDesc2>(),
-        40usize,
-        "Size of ZL_MaterializerDesc2"
-    );
-    assert_eq!(
-        ::std::mem::align_of::<ZL_MaterializerDesc2>(),
-        8usize,
-        "Alignment of ZL_MaterializerDesc2"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).materializeFn) as usize - ptr as usize },
-        0usize,
-        "Offset of field: ZL_MaterializerDesc2::materializeFn"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).dematerializeFn) as usize - ptr as usize },
-        8usize,
-        "Offset of field: ZL_MaterializerDesc2::dematerializeFn"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
-        16usize,
-        "Offset of field: ZL_MaterializerDesc2::opaque"
-    );
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct ZL_MParam {
-    pub content: *const ::std::os::raw::c_void,
-    pub size: usize,
-    #[doc = " For advanced use cases, you can specify a custom ID for this MParam. If\n unset, a default ID will be assigned."]
-    pub mparamID: ZL_MParamID,
-}
-#[test]
-fn bindgen_test_layout_ZL_MParam() {
-    const UNINIT: ::std::mem::MaybeUninit<ZL_MParam> = ::std::mem::MaybeUninit::uninit();
-    let ptr = UNINIT.as_ptr();
-    assert_eq!(
-        ::std::mem::size_of::<ZL_MParam>(),
-        48usize,
-        "Size of ZL_MParam"
-    );
-    assert_eq!(
-        ::std::mem::align_of::<ZL_MParam>(),
-        8usize,
-        "Alignment of ZL_MParam"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).content) as usize - ptr as usize },
-        0usize,
-        "Offset of field: ZL_MParam::content"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).size) as usize - ptr as usize },
-        8usize,
-        "Offset of field: ZL_MParam::size"
-    );
-    assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).mparamID) as usize - ptr as usize },
-        16usize,
-        "Offset of field: ZL_MParam::mparamID"
-    );
-}
-extern "C" {
-    #[doc = " @returns true if @p id is non-NULL and not ZL_MPARAM_ID_NULL."]
-    pub fn ZL_MParamID_hasValue(id: *const ZL_MParamID) -> bool;
-}
 #[doc = " The function signature for function graphs.\n\n @param graph The graph object containing the graph context\n @param inputs The inputs passed into the function graph to compress\n @param nbInputs The number of inputs in @p inputs"]
 pub type ZL_FunctionGraphFn = ::std::option::Option<
     unsafe extern "C" fn(
@@ -2739,10 +2978,12 @@ pub struct ZL_FunctionGraphDesc {
     pub customNodes: *const ZL_NodeID,
     pub nbCustomNodes: usize,
     pub localParams: ZL_LocalParams,
-    #[doc = " Optional materializer descriptor for materialized local params.\n If both materializeFn and dematerializeFn are non-null, the materializer\n will be used to create materialized objects from local params."]
-    pub materializer: ZL_MaterializerDesc,
     #[doc = " Optionally an opaque pointer that can be queried with\n ZL_Graph_getOpaquePtr().\n OpenZL unconditionally takes ownership of this pointer, even if\n registration fails, and it lives for the lifetime of the compressor."]
     pub opaque: ZL_OpaquePtr,
+    #[doc = " Optional materializer for compression-only materialized parameters\n (MParams). If materializeFn is non-null, it will be called during\n compressor deserialization to create the materialized object from\n the serialized MParam blob. Unlike dicts, MParams are NOT required\n at decompression time."]
+    pub mparamMat: ZL_MaterializerDesc,
+    #[doc = " Optional MParam associated with this graph. The provided content blob\n will be materialized as dictated by @p mparamMat . OpenZL will not take\n ownership of the content provided. The caller is free to free the buffer\n anytime after registering the graph."]
+    pub mparam: ZL_MParam,
 }
 #[test]
 fn bindgen_test_layout_ZL_FunctionGraphDesc() {
@@ -2750,7 +2991,7 @@ fn bindgen_test_layout_ZL_FunctionGraphDesc() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_FunctionGraphDesc>(),
-        184usize,
+        240usize,
         "Size of ZL_FunctionGraphDesc"
     );
     assert_eq!(
@@ -2814,14 +3055,19 @@ fn bindgen_test_layout_ZL_FunctionGraphDesc() {
         "Offset of field: ZL_FunctionGraphDesc::localParams"
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).materializer) as usize - ptr as usize },
+        unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
         128usize,
-        "Offset of field: ZL_FunctionGraphDesc::materializer"
+        "Offset of field: ZL_FunctionGraphDesc::opaque"
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
-        160usize,
-        "Offset of field: ZL_FunctionGraphDesc::opaque"
+        unsafe { ::std::ptr::addr_of!((*ptr).mparamMat) as usize - ptr as usize },
+        152usize,
+        "Offset of field: ZL_FunctionGraphDesc::mparamMat"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).mparam) as usize - ptr as usize },
+        192usize,
+        "Offset of field: ZL_FunctionGraphDesc::mparam"
     );
 }
 extern "C" {
@@ -2861,6 +3107,14 @@ extern "C" {
         gctx: *const ZL_Graph,
         refParamId: ::std::os::raw::c_int,
     ) -> ZL_RefParam;
+}
+extern "C" {
+    #[doc = " Bulk consultation request of *all* Local Parameters. This can be useful when\n one is trying to access all the Local Parameters at once for a codec using\n the encoder."]
+    pub fn ZL_Graph_getLocalParams(gctx: *const ZL_Graph) -> *const ZL_LocalParams;
+}
+extern "C" {
+    #[doc = " @returns The materialized MParam object associated with this graph, if\n there is one. Otherwise NULL. MParams are compression-only resources\n that are not required at decompression time."]
+    pub fn ZL_Graph_getMParam(gctx: *const ZL_Graph) -> *const ::std::os::raw::c_void;
 }
 extern "C" {
     #[doc = " Determines whether @nodeid is supported given the applied global parameters\n for the compression.\n Notably the ZL_CParam_formatVersion parameter can determine if a node is\n valid for the given encoding version."]
@@ -3435,6 +3689,15 @@ extern "C" {
     ) -> ZL_NodeID;
 }
 extern "C" {
+    #[doc = " Sets the destination of @p edge to @p entropyGraph with the parameters\n @p minGainBytes and @p minGainPct.\n\n @param minGainBytes The value for ZL_ENTROPY_MIN_GAIN_BYTES_PID or < 0 to\n leave unset.\n @param minGainPct The value for ZL_ENTROPY_MIN_GAIN_PCT_PID or < 0 to leave\n unset."]
+    pub fn ZL_Edge_setEntropyDestination(
+        edge: *mut ZL_Edge,
+        entropyGraph: ZL_GraphID,
+        minGainBytes: ::std::os::raw::c_int,
+        minGainPct: ::std::os::raw::c_int,
+    ) -> ZL_Report;
+}
+extern "C" {
     #[doc = " DEPRECATED: Use ZL_GRAPH_FIELD_LZ instead.\n @returns ZL_GRAPH_FIELD_LZ"]
     pub fn ZL_Compressor_registerFieldLZGraph(cgraph: *mut ZL_Compressor) -> ZL_GraphID;
 }
@@ -3452,6 +3715,44 @@ extern "C" {
         literalsGraph: ZL_GraphID,
     ) -> ZL_GraphID;
 }
+pub const ZL_LzStrategy_fast: ZL_LzStrategy = 1;
+pub const ZL_LzStrategy_doubleFast: ZL_LzStrategy = 2;
+pub const ZL_LzStrategy_greedy: ZL_LzStrategy = 3;
+pub const ZL_LzStrategy_lazy: ZL_LzStrategy = 4;
+pub const ZL_LzStrategy_lazy2: ZL_LzStrategy = 5;
+pub type ZL_LzStrategy = ::std::os::raw::c_uint;
+#[doc = " If set, it overrides the ZL_GCParam_compressionLevel, otherwise\n it defaults to the global compression level.\n\n The compression level controls the default parameters and successor\n graphs. If compression level has no effect on parameters or successor\n graphs that are explicitly overridden.\n\n @note 0 means use the default value."]
+pub const ZL_LzParam_compressionLevel: ZL_LzParam = 1;
+#[doc = " The acceleration parameter controls how quickly the match finder\n skips over the input. Only one in every `acceleration` bytes of\n the input is checked for matches. The default value is derived\n from the compression level. If the compression level is >= 0,\n then it defaults to 1. Otherwise it defaults to -compression_level.\n\n @note 0 means use the default value of 1."]
+pub const ZL_LzParam_acceleration: ZL_LzParam = 100;
+#[doc = " The log2 of the maximum lookback window in LZ match finding.\n windowSize = 1u << windowLog.\n\n The default value is set depending on the compression level and source\n size, and is capped at the source size.\n\n @note 0 means use the default value.\n\n @note If the window size is <= 64K, then LZ will use 16-bit offsets\n rather than 32-bit offsets."]
+pub const ZL_LzParam_windowLog: ZL_LzParam = 101;
+#[doc = " The ZL_LzStrategy to use for compression.\n\n The greedy, lazy & lazy2 strategies search several match candidates per\n position in a single table, so they ignore ZL_LzParam_hashLog2 and are\n controlled by ZL_LzParam_searchLog instead.\n\n @note 0 means use the default value."]
+pub const ZL_LzParam_strategy: ZL_LzParam = 102;
+#[doc = " The log2 of the primary hash table in LZ match finding. Higher values use\n more memory, but potentially improve compression.\n\n @note 0 means use the default value."]
+pub const ZL_LzParam_hashLog1: ZL_LzParam = 103;
+#[doc = " The log2 of the secondary hash table in LZ match finding. Higher values\n use more memory, but potentially improve compression.\n\n @note 0 means use the default value.\n @note This will be ignored if the strategy doesn't use the secondary\n table."]
+pub const ZL_LzParam_hashLog2: ZL_LzParam = 104;
+#[doc = " The number of bytes to hash in match finding hash tables. This is\n effectively the minimum match length that the match finder searches for\n (though it may find shorter matches by happenstance).\n\n @note 0 means use the default value."]
+pub const ZL_LzParam_hashLength: ZL_LzParam = 105;
+#[doc = " The log2 of the number of match candidates examined at each searched\n position. Higher values improve compression at the cost of speed.\n\n @note 0 means use the default value.\n @note This is only used by the greedy, lazy & lazy2 strategies. The\n other strategies keep a single candidate per hash table entry."]
+pub const ZL_LzParam_searchLog: ZL_LzParam = 106;
+#[doc = " If set, the customGraph at this index is used to compress the literals,\n rather than sending them to the default graph."]
+pub const ZL_LzParam_literalsGraphIdx: ZL_LzParam = 1000;
+#[doc = " If set, the customGraph at this index is used to compress the offsets,\n rather than sending them to the default graph."]
+pub const ZL_LzParam_offsetsGraphIdx: ZL_LzParam = 1001;
+#[doc = " If set, the customGraph at this index is used to compress the muxed\n bytes (first output of ZL_NODE_MUX_LENGTHS), rather than sending them to\n the default graph.\n\n @note Not used if ZL_LzParam_muxLengthsGraphIdx is set."]
+pub const ZL_LzParam_muxedBytesGraphIdx: ZL_LzParam = 1002;
+#[doc = " If set, the customGraph at this index is used to compress the overflow\n lengths (second output of ZL_NODE_MUX_LENGTHS), rather than sending them\n to the default graph.\n\n @note Not used if ZL_LzParam_muxLengthsGraphIdx is set."]
+pub const ZL_LzParam_overflowLengthsGraphIdx: ZL_LzParam = 1003;
+#[doc = " If set, the custom graph at this index is used to compress the literal\n lengths and match lengths, rather than sending them to\n ZL_NODE_MUX_LENGTHS.\n\n @note Must be a multi-input graph that accepts two 16-bit numeric inputs."]
+pub const ZL_LzParam_muxLengthsGraphIdx: ZL_LzParam = 1004;
+#[doc = " Entropy backend graphs will only be invoked if they can save this many\n bytes. This overrides the default value which is 0.5% of the input size\n + 50 bytes.\n\n Increasing this value will speed up decompression at the cost of\n compressed size."]
+pub const ZL_LzParam_minGainForEntropyBytes: ZL_LzParam = 10000;
+#[doc = " Entropy backend graphs will only be invoked if they can save this percent\n of their input size. This overrides the default value, which is 1%.\n\n Increasing this value will speed up decompression at the cost of\n compressed size."]
+pub const ZL_LzParam_minGainForEntropyPct: ZL_LzParam = 10001;
+#[doc = " Parameters that control the behavior of ZL_NODE_LZ and ZL_GRAPH_LZ.\n\n Parameters will be clamped to their min & max values where relevant (see\n below)."]
+pub type ZL_LzParam = ::std::os::raw::c_uint;
 extern "C" {
     #[doc = " @returns ZL_GRAPH_LZ4 with overridden compression level"]
     pub fn ZL_Compressor_buildLZ4Graph(
@@ -3687,6 +3988,12 @@ extern "C" {
         cgraph: *mut ZL_Compressor,
         compressionLevel: ::std::os::raw::c_int,
     ) -> ZL_GraphID;
+}
+extern "C" {
+    #[doc = " @return A trainable zstd graph with the default compression level"]
+    pub fn ZL_Compressor_buildTrainableZstdGraph(
+        cgraph: *mut ZL_Compressor,
+    ) -> ZL_Result_ZL_GraphID;
 }
 extern "C" {
     #[doc = " @brief Create a new @ref ZL_Compressor.\n\n The @ref ZL_Compressor must be freed with @ref ZL_Compressor_free.\n\n @returns The @ref ZL_Compressor pointer or `NULL` on error."]
@@ -3988,6 +4295,8 @@ pub struct ZL_GraphParameters_s {
     pub nbCustomNodes: usize,
     #[doc = " NULL means don't override"]
     pub localParams: *const ZL_LocalParams,
+    #[doc = " Optional MParam blob to (re)materialize on the target graph. Empty\n content means don't override the graph's MParam."]
+    pub mparam: ZL_MParam,
 }
 #[test]
 fn bindgen_test_layout_ZL_GraphParameters_s() {
@@ -3995,7 +4304,7 @@ fn bindgen_test_layout_ZL_GraphParameters_s() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_GraphParameters_s>(),
-        48usize,
+        96usize,
         "Size of ZL_GraphParameters_s"
     );
     assert_eq!(
@@ -4033,6 +4342,11 @@ fn bindgen_test_layout_ZL_GraphParameters_s() {
         40usize,
         "Offset of field: ZL_GraphParameters_s::localParams"
     );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).mparam) as usize - ptr as usize },
+        48usize,
+        "Offset of field: ZL_GraphParameters_s::mparam"
+    );
 }
 #[doc = " @defgroup Group_Compressor_GraphCustomization Graph Customization\n\n Graphs can be customized to override their name, local parameters, custom\n nodes and custom graphs. This is an advanced use case, and mainly an\n implementation detail of graphs. Most graphs which accept parameters provide\n helper functions to correctly parameterize the graph.\n\n @{"]
 pub type ZL_GraphParameters = ZL_GraphParameters_s;
@@ -4059,6 +4373,8 @@ pub struct ZL_ParameterizedGraphDesc {
     pub nbCustomNodes: usize,
     #[doc = " NULL means don't override"]
     pub localParams: *const ZL_LocalParams,
+    #[doc = " Optional per-instance MParam blob. It is materialized at registration\n using the base graph's materializer (mparamMat). Empty content means no\n MParam."]
+    pub mparam: ZL_MParam,
 }
 #[test]
 fn bindgen_test_layout_ZL_ParameterizedGraphDesc() {
@@ -4067,7 +4383,7 @@ fn bindgen_test_layout_ZL_ParameterizedGraphDesc() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_ParameterizedGraphDesc>(),
-        56usize,
+        104usize,
         "Size of ZL_ParameterizedGraphDesc"
     );
     assert_eq!(
@@ -4109,6 +4425,11 @@ fn bindgen_test_layout_ZL_ParameterizedGraphDesc() {
         unsafe { ::std::ptr::addr_of!((*ptr).localParams) as usize - ptr as usize },
         48usize,
         "Offset of field: ZL_ParameterizedGraphDesc::localParams"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).mparam) as usize - ptr as usize },
+        56usize,
+        "Offset of field: ZL_ParameterizedGraphDesc::mparam"
     );
 }
 extern "C" {
@@ -4260,12 +4581,14 @@ extern "C" {
     pub fn ZL_CompressorDeserializer_free(deserializer: *mut ZL_CompressorDeserializer);
 }
 extern "C" {
-    #[doc = " Reads the serialized compressor represented by @p serialized and pushes\n the graph structure and configuration it describes into @p compressor.\n\n In order for materialization to succeed, the @p compressor must already have\n all of the custom transforms, graph functions, selectors, etc. registered\n that were available when the compressor was serialized. You can use @ref\n ZL_CompressorDeserializer_getDependencies() to determine what non-serialized\n graph components are needed on the destination compressor. You can then set\n those components up before invoking this operation on that compressor.\n\n See the documentation above for a more thorough discussion of these\n requirements and how best to structure a compressor to meet them.\n\n If this operation fails, the compressor may be left in an indeterminate\n state. The best thing to do is to just throw this compressor away\n (via @ref ZL_Compressor_free) and not to try to re-use it."]
+    #[doc = " Reads the serialized compressor represented by @p serialized and pushes\n the graph structure and configuration it describes into @p compressor. If the\n compressor requires a dict bundle, it should be passed as a \"fat\" bundle via\n @p fatBundle (if no bundle is required, pass NULL). See @ref\n ZL_Compressor_loadDictBundle() for more details.\n\n In order for materialization to succeed, the @p compressor must already have\n all of the custom transforms, graph functions, selectors, etc. registered\n that were available when the compressor was serialized. You can use @ref\n ZL_CompressorDeserializer_getDependencies() to determine what non-serialized\n graph components are needed on the destination compressor. You can then set\n those components up before invoking this operation on that compressor. @ref\n ZL_CompressorDeserializer_getDependencies() should also be used to determine\n if a bundle is required.\n\n See the documentation above for a more thorough discussion of these\n requirements and how best to structure a compressor to meet them.\n\n If this operation fails, the compressor may be left in an indeterminate\n state. The best thing to do is to just throw this compressor away\n (via @ref ZL_Compressor_free) and not to try to re-use it."]
     pub fn ZL_CompressorDeserializer_deserialize(
         deserializer: *mut ZL_CompressorDeserializer,
         compressor: *mut ZL_Compressor,
         serialized: *const ::std::os::raw::c_void,
         serializedSize: usize,
+        fatBundle: *const ::std::os::raw::c_void,
+        fatBundleSize: usize,
     ) -> ZL_Report;
 }
 #[doc = " Doesn't own any memory."]
@@ -4276,6 +4599,7 @@ pub struct ZL_CompressorDeserializer_Dependencies {
     pub num_graphs: usize,
     pub node_names: *const *const ::std::os::raw::c_char,
     pub num_nodes: usize,
+    pub bundle_id: ZL_BundleID,
 }
 #[test]
 fn bindgen_test_layout_ZL_CompressorDeserializer_Dependencies() {
@@ -4284,7 +4608,7 @@ fn bindgen_test_layout_ZL_CompressorDeserializer_Dependencies() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_CompressorDeserializer_Dependencies>(),
-        32usize,
+        64usize,
         "Size of ZL_CompressorDeserializer_Dependencies"
     );
     assert_eq!(
@@ -4312,6 +4636,11 @@ fn bindgen_test_layout_ZL_CompressorDeserializer_Dependencies() {
         24usize,
         "Offset of field: ZL_CompressorDeserializer_Dependencies::num_nodes"
     );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).bundle_id) as usize - ptr as usize },
+        32usize,
+        "Offset of field: ZL_CompressorDeserializer_Dependencies::bundle_id"
+    );
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -4326,7 +4655,7 @@ fn bindgen_test_layout_ZL_Result_ZL_CompressorDeserializer_Dependencies_inner() 
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_Result_ZL_CompressorDeserializer_Dependencies_inner>(),
-        40usize,
+        72usize,
         "Size of ZL_Result_ZL_CompressorDeserializer_Dependencies_inner"
     );
     assert_eq!(
@@ -4359,7 +4688,7 @@ fn bindgen_test_layout_ZL_Result_ZL_CompressorDeserializer_Dependencies_u() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_Result_ZL_CompressorDeserializer_Dependencies_u>(),
-        40usize,
+        72usize,
         "Size of ZL_Result_ZL_CompressorDeserializer_Dependencies_u"
     );
     assert_eq!(
@@ -4724,8 +5053,6 @@ pub struct ZL_SelectorDesc {
     pub customGraphs: *const ZL_GraphID,
     pub nbCustomGraphs: usize,
     pub localParams: ZL_LocalParams,
-    #[doc = " Optional materializer descriptor for materialized local params.\n If both materializeFn and dematerializeFn are non-null, the materializer\n will be used to create materialized objects from local params."]
-    pub materializer: ZL_MaterializerDesc,
     #[doc = " Optional, the name of the graph rooted by the selector."]
     pub name: *const ::std::os::raw::c_char,
     #[doc = " Optionally an opaque pointer that can be queried with\n ZL_Selector_getOpaquePtr().\n OpenZL unconditionally takes ownership of this pointer, even if\n registration fails, and it lives for the lifetime of the compressor."]
@@ -4737,7 +5064,7 @@ fn bindgen_test_layout_ZL_SelectorDesc() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_SelectorDesc>(),
-        144usize,
+        112usize,
         "Size of ZL_SelectorDesc"
     );
     assert_eq!(
@@ -4771,18 +5098,13 @@ fn bindgen_test_layout_ZL_SelectorDesc() {
         "Offset of field: ZL_SelectorDesc::localParams"
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).materializer) as usize - ptr as usize },
-        80usize,
-        "Offset of field: ZL_SelectorDesc::materializer"
-    );
-    assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).name) as usize - ptr as usize },
-        112usize,
+        80usize,
         "Offset of field: ZL_SelectorDesc::name"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
-        120usize,
+        88usize,
         "Offset of field: ZL_SelectorDesc::opaque"
     );
 }
@@ -4856,6 +5178,10 @@ extern "C" {
         selCtx: *const ZL_Selector,
         gparam: ZL_CParam,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Determines whether @p nodeid is supported given the applied global\n compression parameters. Notably, `ZL_CParam_formatVersion` determines\n whether a node is valid for the selected encoding version."]
+    pub fn ZL_Selector_isNodeSupported(selCtx: *const ZL_Selector, nodeid: ZL_NodeID) -> bool;
 }
 extern "C" {
     pub fn ZL_Selector_getLocalIntParam(
@@ -5252,14 +5578,12 @@ pub struct ZL_MIEncoderDesc {
     pub trStateMgr: ZL_CodecStateManager,
     #[doc = " Optionally an opaque pointer that can be queried with\n ZL_Encoder_getOpaquePtr().\n OpenZL unconditionally takes ownership of this pointer, even if\n registration fails, and it lives for the lifetime of the compressor."]
     pub opaque: ZL_OpaquePtr,
-    #[doc = " Optional materializer descriptor for materialized local params.\n If both materializeFn and dematerializeFn are non-null, the materializer\n will be used to create materialized objects from local params."]
-    pub materializer: ZL_MaterializerDesc,
     #[doc = " Optional materializer descriptor for materialized dicts.\n If both materializeFn and dematerializeFn are non-null, the materializer\n will be used to create materialized objects. Create a node with\n materialization using ZL_Compressor_parameterizeNode()."]
-    pub dictMat: ZL_MaterializerDesc2,
+    pub dictMat: ZL_MaterializerDesc,
     #[doc = " Optional dictionary ID associated with this encoder.\n When set, identifies the dictionary that this encoder requires.\n A zero-initialized value (ZL_DICT_ID_NULL) means no dictionary is\n associated."]
     pub dictID: ZL_DictID,
     #[doc = " Optional materializer for compression-only materialized parameters\n  (MParams). If materializeFn is non-null, it will be called during\n  compressor deserialization to create the materialized object from\n  the serialized MParam blob. Unlike dicts, MParams are NOT required\n  at decompression time."]
-    pub mparamMat: ZL_MaterializerDesc2,
+    pub mparamMat: ZL_MaterializerDesc,
     #[doc = " Optional MParam associated with this encoder. The provided content blob\n will be materialized as dictated by @p mparamMat . OpenZL will not take\n ownership of the content provided. The caller is free to free the buffer\n anytime after registering the MIEncoder with\n ZL_Compressor_registerMIEncoder()."]
     pub mparam: ZL_MParam,
 }
@@ -5269,7 +5593,7 @@ fn bindgen_test_layout_ZL_MIEncoderDesc() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<ZL_MIEncoderDesc>(),
-        368usize,
+        336usize,
         "Size of ZL_MIEncoderDesc"
     );
     assert_eq!(
@@ -5308,28 +5632,23 @@ fn bindgen_test_layout_ZL_MIEncoderDesc() {
         "Offset of field: ZL_MIEncoderDesc::opaque"
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).materializer) as usize - ptr as usize },
-        176usize,
-        "Offset of field: ZL_MIEncoderDesc::materializer"
-    );
-    assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).dictMat) as usize - ptr as usize },
-        208usize,
+        176usize,
         "Offset of field: ZL_MIEncoderDesc::dictMat"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).dictID) as usize - ptr as usize },
-        248usize,
+        216usize,
         "Offset of field: ZL_MIEncoderDesc::dictID"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).mparamMat) as usize - ptr as usize },
-        280usize,
+        248usize,
         "Offset of field: ZL_MIEncoderDesc::mparamMat"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).mparam) as usize - ptr as usize },
-        320usize,
+        288usize,
         "Offset of field: ZL_MIEncoderDesc::mparam"
     );
 }
@@ -5379,7 +5698,7 @@ extern "C" {
     pub fn ZL_Encoder_getLocalParams(eic: *const ZL_Encoder) -> *const ZL_LocalParams;
 }
 extern "C" {
-    #[doc = " @returns The materialized dictionary object associated with this node, if\n there is one. Otherwise NULL."]
+    #[doc = " @returns The materialized dictionary object associated with this node, if\n there is one. Returns NULL if there is no dict or if the frame format is\n less than ZL_MATERIALIZED_DICT_VERSION_MIN."]
     pub fn ZL_Encoder_getMaterializedDict(
         eictx: *const ZL_Encoder,
     ) -> *const ::std::os::raw::c_void;
@@ -5455,6 +5774,10 @@ extern "C" {
 extern "C" {
     #[doc = " @brief Frees a decompression context.\n\n @param dctx Decompression context to free"]
     pub fn ZL_DCtx_free(dctx: *mut ZL_DCtx);
+}
+extern "C" {
+    #[doc = " @brief Attach a dict loader to the decompression context.\n\n The dict loader is referenced (not owned) by the DCtx. The caller must\n ensure the dict loader outlives the DCtx."]
+    pub fn ZL_DCtx_refDictLoader(dctx: *mut ZL_DCtx, loader: *mut ZL_DictLoader);
 }
 #[doc = " @brief Keep parameters across decompression sessions.\n\n By default, parameters are reset between decompression sessions.\n Setting this parameter to 1 keeps the parameters across sessions."]
 pub const ZL_DParam_stickyParameters: ZL_DParam = 1;
@@ -5652,6 +5975,10 @@ pub type ZL_Result_ZL_Comment_fake_type_needs_semicolon = ::std::os::raw::c_int;
 extern "C" {
     #[doc = " @brief Gets the comment stored in the FrameInfo.\n\n @returns The comment or an error. If no comment is present it\n returns a comment with `size == 0`. The buffer returned is owned by @p zfi"]
     pub fn ZL_FrameInfo_getComment(zfi: *const ZL_FrameInfo) -> ZL_Result_ZL_Comment;
+}
+extern "C" {
+    #[doc = " @brief Gets the dict bundle ID referenced by the frame, if any.\n\n @returns A pointer to the bundle ID stored in @p zfi, or NULL if the frame\n does not reference a dict bundle."]
+    pub fn ZL_FrameInfo_getBundleID(zfi: *const ZL_FrameInfo) -> *const ZL_BundleID;
 }
 #[doc = " @brief Information about a decompressed typed output."]
 #[repr(C)]
@@ -6168,6 +6495,12 @@ extern "C" {
     #[doc = " @returns Returns a state, as generated by the Transform's State Manager."]
     pub fn ZL_Decoder_getState(dictx: *const ZL_Decoder) -> *mut ::std::os::raw::c_void;
 }
+extern "C" {
+    #[doc = " @returns The materialized dictionary object resolved for this node from the\n          dict loader attached to the active DCtx, if there is one, otherwise\n          NULL.\n\n NOTE: If the frame format < ZL_MATERIALIZED_DICT_VERSION_MIN, this will\n necessarily return NULL."]
+    pub fn ZL_Decoder_getMaterializedDict(
+        dictx: *const ZL_Decoder,
+    ) -> *const ::std::os::raw::c_void;
+}
 pub const ZL_GraphType_standard: ZL_GraphType = 0;
 pub const ZL_GraphType_static: ZL_GraphType = 1;
 pub const ZL_GraphType_selector: ZL_GraphType = 2;
@@ -6420,6 +6753,20 @@ extern "C" {
     ) -> ZL_Report;
 }
 extern "C" {
+    #[doc = " @returns The minimum library version to deserialize a compressor containing\n this node, or an error if the node is not a valid standard node."]
+    pub fn ZL_Compressor_Node_getMinLibraryVersion(
+        compressor: *const ZL_Compressor,
+        node: ZL_NodeID,
+    ) -> ZL_Report;
+}
+extern "C" {
+    #[doc = " @returns The minimum library version to deserialize a compressor containing\n this standard graph, or an error if the graph ID is out of bounds."]
+    pub fn ZL_Compressor_Graph_getMinLibraryVersion(
+        compressor: *const ZL_Compressor,
+        gid: ZL_GraphID,
+    ) -> ZL_Report;
+}
+extern "C" {
     #[doc = " @returns The MParam ID associated with the @p node or ZL_MPARAM_ID_NULL if no\n MParam is associated."]
     pub fn ZL_Compressor_Node_getMParamID(
         cgraph: *const ZL_Compressor,
@@ -6438,6 +6785,20 @@ extern "C" {
     pub fn ZL_Compressor_Node_getMParamObj(
         cgraph: *const ZL_Compressor,
         node: ZL_NodeID,
+    ) -> *const ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " @returns A pointer to the *unmaterialized* MParam associated with the @p\n graph, or NULL if no MParam is associated."]
+    pub fn ZL_Compressor_Graph_getMParam(
+        cgraph: *const ZL_Compressor,
+        graph: ZL_GraphID,
+    ) -> *const ZL_MParam;
+}
+extern "C" {
+    #[doc = " @returns The *materialized* Mparam object associated with the @p graph or\n NULL if no MParam is associated."]
+    pub fn ZL_Compressor_Graph_getMParamObj(
+        cgraph: *const ZL_Compressor,
+        graph: ZL_GraphID,
     ) -> *const ::std::os::raw::c_void;
 }
 extern "C" {

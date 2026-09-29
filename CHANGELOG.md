@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/LDeakin/openzl-sys/compare/v0.2.0+openzl.0.2.0...HEAD)
 
+### Changed
+- Update the crate and bundled OpenZL to [0.3.0](https://github.com/facebook/openzl/releases/tag/v0.3.0) (maximum frame format version 27)
+  - Adds PivCo Huffman, sparse numeric and Transformer graphs, LZ tuning, codec caching, MParams, and dictionary bundles.
+
+### Breaking
+- `ZL_Compressor_registerBruteForceSelectorGraph()` is now `ZL_Compressor_buildBruteForceSelectorGraph()`
+- `ZL_CompressorDeserializer_deserialize()` now takes `fatBundle` and `fatBundleSize`
+- `ZL_MaterializerDesc_s`, `ZL_MaterializerDesc2`, `ZL_MaterializerDesc.paramId`, and the `materializer` fields in `ZL_FunctionGraphDesc`, `ZL_SelectorDesc`, and `ZL_MIEncoderDesc` were removed
+- `ZL_FunctionGraphDesc`, `ZL_GraphParameters_s`, and `ZL_ParameterizedGraphDesc` gained MParam fields; `ZL_CompressorDeserializer_Dependencies` gained `bundle_id`
+
 ## [0.2.0+openzl.0.2.0](https://github.com/LDeakin/openzl-sys/releases/tag/v0.2.0+openzl.0.2.0) - 2026-05-08
 
 ### Added
