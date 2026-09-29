@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ZL_CompressorDeserializer_deserialize()` now takes `fatBundle` and `fatBundleSize`
   - `ZL_MaterializerDesc_s`, `ZL_MaterializerDesc2`, `ZL_MaterializerDesc.paramId`, and the `materializer` fields in `ZL_FunctionGraphDesc`, `ZL_SelectorDesc`, and `ZL_MIEncoderDesc` were removed
   - `ZL_FunctionGraphDesc`, `ZL_GraphParameters_s`, and `ZL_ParameterizedGraphDesc` gained MParam fields; `ZL_CompressorDeserializer_Dependencies` gained `bundle_id`
+- Bump MSRV to 1.85
 
 ## [0.2.0+openzl.0.2.0](https://github.com/LDeakin/openzl-sys/releases/tag/v0.2.0+openzl.0.2.0) - 2026-05-08
 
